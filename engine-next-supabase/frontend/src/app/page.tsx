@@ -126,12 +126,12 @@ export default function Dashboard() {
       </div>
 
       {/* Featured Chart Section */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-8">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
-          className="lg:col-span-2 glass-card p-8"
+          className="glass-card p-8"
         >
           <div className="mb-6 flex items-center justify-between">
             <h3 className="text-xl font-semibold text-white">
@@ -167,34 +167,6 @@ export default function Dashboard() {
                     {mounted ? 'Waiting for incoming data stream...' : 'Loading Analytics Hardware...'}
                 </div>
             )}
-          </div>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="glass-card p-8 neon-border-purple"
-        >
-          <h3 className="mb-6 text-xl font-semibold text-white">
-            System Alerts
-          </h3>
-          <div className="space-y-4">
-            <AlertItem
-              type="warning"
-              message="High traffic detected from source 'SHOP_API'"
-              time="2m ago"
-            />
-            <AlertItem
-              type="success"
-              message="AI Classification accuracy reached 98.4%"
-              time="15m ago"
-            />
-            <AlertItem
-              type="info"
-              message="LATER queue batch processor executed successfully"
-              time="1h ago"
-            />
           </div>
         </motion.div>
       </div>
@@ -253,24 +225,3 @@ function StatusBadge({ label, value, icon: Icon, color }: any) {
   );
 }
 
-function AlertItem({ type, message, time }: any) {
-  const typeColors: any = {
-    success: 'bg-emerald-500',
-    warning: 'bg-amber-500',
-    info: 'bg-purple-500',
-  };
-
-  return (
-    <div className="flex gap-4 border-b border-white/5 pb-4 last:border-0 last:pb-0">
-      <div
-        className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${typeColors[type] || 'bg-zinc-500'}`}
-      />
-      <div>
-        <p className="text-sm text-zinc-300 line-clamp-2">{message}</p>
-        <span className="text-[10px] text-zinc-500 uppercase tracking-widest mt-1 block">
-          {time}
-        </span>
-      </div>
-    </div>
-  );
-}
