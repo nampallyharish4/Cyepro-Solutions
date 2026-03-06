@@ -76,6 +76,7 @@ export class NotificationController {
     const { data } = await supabase
       .from('rules')
       .select('*')
+      .eq('is_active', true)
       .order('priority_order', { ascending: false });
     return res.json(data);
   }
@@ -89,4 +90,19 @@ export class NotificationController {
     if (error) return res.status(500).json(error);
     return res.status(201).json(data);
   }
+
+  static async deleteRule(req: Request, res: Response) {
+    // Soft delete requirement: "Deleted data must be recoverable — hard deletes are not acceptable."
+    const { id } = req.params;
+    const { data, error } = await supabase
+      .from('rules')
+      .update({ is_active: false })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) return res.status(500).json(error);
+    return res.json(data);
+  }
 }
+

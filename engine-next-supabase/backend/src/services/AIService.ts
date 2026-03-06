@@ -8,10 +8,13 @@ dotenv.config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || "");
 
 axiosRetry(axios, {
-  retries: 1, // Reduced to 1 for faster fallback
-  retryDelay: () => 500,
+  retries: 2, // Allow 2 retries before tripping the circuit breaker
+  retryDelay: (retryCount) => {
+    // Increasing delay: 500ms, then 1000ms
+    return retryCount * 500;
+  },
   retryCondition: (error) =>
-    axiosRetry.isNetworkOrIdempotentRequestError(error)
+    axiosRetry.isNetworkOrIdempotentRequestError(error) || error.code === 'ECONNABORTED' || error.response?.status === 429
 });
 
 export class AIService {

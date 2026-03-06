@@ -26,6 +26,7 @@ app.get('/api/metrics', NotificationController.getMetrics);
 app.get('/api/audit', NotificationController.getAuditLogs);
 app.get('/api/rules', NotificationController.getRules);
 app.post('/api/rules', NotificationController.createRule);
+app.delete('/api/rules/:id', NotificationController.deleteRule);
 
 app.get('/health', async (req: Request, res: Response) => {
   const aiStatus = AIService.getStatus();
