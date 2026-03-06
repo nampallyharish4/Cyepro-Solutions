@@ -40,7 +40,7 @@ export function Sidebar() {
         </span>
       </div>
 
-      <nav className="flex flex-1 items-center justify-around px-2 md:block md:space-y-1 md:justify-start">
+      <nav className="flex flex-1 items-center justify-start gap-2 overflow-x-auto overflow-y-hidden px-4 md:block md:space-y-1 md:overflow-visible md:px-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -50,7 +50,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center gap-1 rounded-xl px-4 py-2 transition-all duration-300 md:flex-row md:gap-3',
+                'flex flex-col items-center gap-1 rounded-xl px-3 py-2 transition-all duration-300 md:flex-row md:gap-3 md:px-4',
                 isActive
                   ? 'text-purple-400 md:bg-white/5 md:text-white'
                   : 'text-zinc-500 hover:text-zinc-300 md:hover:bg-white/5',
@@ -62,7 +62,7 @@ export function Sidebar() {
                   isActive && 'md:text-purple-400',
                 )}
               />
-              <span className="text-[10px] font-medium md:text-sm">
+              <span className="text-[10px] font-medium whitespace-nowrap md:text-sm">
                 {item.label}
               </span>
             </Link>
@@ -76,10 +76,10 @@ export function Sidebar() {
             localStorage.removeItem('token');
             window.location.href = '/login';
           }}
-          className="flex w-full flex-col items-center gap-1 rounded-xl px-4 py-2 text-zinc-500 transition-all duration-300 hover:text-red-400 md:flex-row md:gap-3 md:hover:bg-red-500/5"
+          className="flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-zinc-500 transition-all duration-300 hover:text-red-400 md:w-full md:flex-row md:gap-3 md:px-4 md:hover:bg-red-500/5"
         >
           <Lock className="h-6 w-6 md:h-5 md:w-5" />
-          <span className="text-[10px] font-medium md:text-sm">
+          <span className="text-[10px] font-medium whitespace-nowrap md:text-sm">
             Logout
           </span>
         </button>
