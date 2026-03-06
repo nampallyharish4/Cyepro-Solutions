@@ -51,9 +51,9 @@ export default function Dashboard() {
   }, []);
 
   const chartData = [
-    { name: 'NOW', value: metrics.now, color: '#10b981' },
-    { name: 'LATER', value: metrics.later, color: '#f59e0b' },
-    { name: 'NEVER', value: metrics.never, color: '#f43f5e' },
+    { name: 'NOW', value: metrics.now, fill: '#10b981' },
+    { name: 'LATER', value: metrics.later, fill: '#f59e0b' },
+    { name: 'NEVER', value: metrics.never, fill: '#f43f5e' },
   ].filter(d => d.value > 0);
 
   return (
@@ -154,7 +154,7 @@ export default function Dashboard() {
                     stroke="none"
                   >
                     {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                      <Cell key={`cell-${index}`} fill={entry.fill} stroke="none" />
                     ))}
                   </Pie>
                   <Tooltip 
