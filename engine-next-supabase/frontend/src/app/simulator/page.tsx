@@ -64,12 +64,6 @@ export default function Simulator() {
         if (attempts > 20) clearInterval(interval);
       }, 800);
 
-      // Regenerate dedupe key for next test
-      setForm(prev => ({
-        ...prev,
-        dedupe_key: `dedupe_${Math.random().toString(36).substr(2, 9)}`
-      }));
-
     } catch (err) {
       console.error(err);
       setResult({ error: 'Failed to submit event' });
@@ -122,6 +116,11 @@ export default function Simulator() {
               label="Title"
               value={form.title}
               onChange={(v: string) => setForm({ ...form, title: v })}
+            />
+            <InputGroup
+              label="Dedupe Key (Optional)"
+              value={form.dedupe_key}
+              onChange={(v: string) => setForm({ ...form, dedupe_key: v })}
             />
             <div className="space-y-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">
               <label>Message Payload</label>

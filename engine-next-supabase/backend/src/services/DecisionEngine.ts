@@ -64,7 +64,6 @@ export class DecisionEngine {
           .from('notification_events')
           .select('id')
           .eq('dedupe_key', event.dedupe_key)
-          .eq('status', 'PROCESSED')
           .neq('id', eventId)
           .limit(1);
 
@@ -85,11 +84,14 @@ export class DecisionEngine {
         p_threshold: 0.8,
       });
 
-      if (nearDups && nearDups.length > 0) {
+      // Filter out the current event itself if the RPC happens to return it
+      const actualNearDups = nearDups?.filter((n: any) => n.id !== eventId) || [];
+
+      if (actualNearDups.length > 0) {
         await this.finalizeDecision(
           eventId,
           'NEVER',
-          `Near-duplicate detected (Similarity: ${nearDups[0].similarity})`,
+          `Near-duplicate detected (Similarity: ${actualNearDups[0].similarity})`,
         );
         return;
       }
