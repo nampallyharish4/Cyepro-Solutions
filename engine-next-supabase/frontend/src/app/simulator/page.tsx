@@ -100,7 +100,7 @@ export default function Simulator() {
               value={form.user_id}
               onChange={(v: string) => setForm({ ...form, user_id: v })}
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <InputGroup
                 label="Event Type"
                 value={form.event_type}

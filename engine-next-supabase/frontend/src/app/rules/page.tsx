@@ -195,10 +195,9 @@ export default function RulesManager() {
           </form>
         </div>
       )}
-
       {/* Rules Table */}
-      <div className="glass-card overflow-hidden">
-        <table className="w-full text-left">
+      <div className="glass-card overflow-x-auto overflow-y-hidden">
+        <table className="w-full text-left min-w-[600px]">
           <thead>
             <tr className="border-b border-white/5 bg-white/5">
               <th className="px-6 py-4 text-xs font-bold uppercase tracking-widest text-zinc-500">
