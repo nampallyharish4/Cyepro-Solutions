@@ -4,28 +4,32 @@ This document describes the production deployment strategy for the Notification 
 
 ## Live Environment
 - **Frontend Architecture**: Deployed on **Vercel**.
-- **Backend Architecture**: Scalable Node.js environment (e.g., **Railway** or **AWS App Runner**).
+  - URL: `[Paste your Vercel URL here]`
+- **Backend Architecture**: Scalable Node.js environment on **Render**.
+  - URL: `https://cyepro-notification-engine-backend.onrender.com`
 - **Database Architecture**: Managed **Supabase (PostgreSQL)** instance.
 
 ## Production Configuration
 
-### Environment Variables (Vercel/Railway)
+### Environment Variables (Vercel/Render)
 - `SUPABASE_URL`: The API endpoint for the production Supabase project.
 - `SUPABASE_SERVICE_ROLE_KEY`: Elevated key for backend operations.
-- `SUPABASE_ANON_KEY`: Client-side key for frontend real-time subscriptions.
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Client-side key for frontend.
+- `NEXT_PUBLIC_API_URL`: Points to the deployed Render backend API.
 - `GROQ_API_KEY`: Secret key for LLM classification (Primary).
+- `MODEL_NAME`: The active LLM model (`llama-3.3-70b-versatile`).
 - `GEMINI_API_KEY`: Secret key for LLM classification (Fallback).
 - `JWT_SECRET`: Used for securing admin access.
 - `NODE_ENV`: Set to `production`.
 
 ### Secrets Management
-- Backend secrets are managed via **Railway Shared Variables** or **AWS Secrets Manager**.
+- Backend secrets are managed via **Render Environment Variables**.
 - No credentials are committed to the repository.
 
 ## Difference Between Local and Production
-- **Database**: Local uses the `localhost:54321` Supabase CLI (if applicable), while Production uses a managed Postgres instance.
+- **Database**: Both Local and Production strictly use the managed cloud Postgres instance for consistency in debugging.
 - **SSL**: Production requires forced HTTPS for all API and frontend calls.
-- **AI Model**: Local testing may use `gpt-4o-mini` for cost-efficiency, while Production uses `gpt-4o` for higher reasoning accuracy.
+- **AI Model**: Both Local and Production use `llama-3.3-70b-versatile` powered by Groq to guarantee deterministic sub-second performance across all environments.
 
 ## Maintenance & Redeployment
 - **Frontend**: Automatically redeploys on every `git push` to the `main` branch via Vercel's GitHub integration.
