@@ -104,16 +104,21 @@ export default function Login() {
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex gap-4">
             <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
             <div className="text-xs text-amber-500/80 leading-relaxed font-medium">
-              <strong>Reviewer Note:</strong> Use the pre-filled credentials
-              above for instant dashboard access.
-              <br />
-              <code className="text-[10px] bg-amber-500/10 px-1 rounded">
-                admin@cyepro.com
-              </code>{' '}
-              |{' '}
-              <code className="text-[10px] bg-amber-500/10 px-1 rounded">
-                password123
-              </code>
+              <strong>Reviewer Credentials:</strong>
+              <div className="mt-2 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 w-16">Admin</span>
+                  <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">admin@cyepro.com</code>
+                  <span className="text-amber-500/40">|</span>
+                  <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">password123</code>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 w-16">Operator</span>
+                  <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">operator@cyepro.com</code>
+                  <span className="text-amber-500/40">|</span>
+                  <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">operator123</code>
+                </div>
+              </div>
             </div>
           </div>
         </div>

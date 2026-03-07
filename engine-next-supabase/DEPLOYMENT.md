@@ -4,9 +4,10 @@ This document describes the production deployment strategy for the Notification 
 
 ## Live Environment
 - **Frontend Architecture**: Deployed on **Vercel**.
-  - URL: `[Paste your Vercel URL here]`
+  - URL: https://cyepro-solutions.vercel.app
 - **Backend Architecture**: Scalable Node.js environment on **Render**.
-  - URL: `https://cyepro-notification-engine-backend.onrender.com`
+  - URL: https://cyepro-notification-engine-backend.onrender.com
+- **GitHub Repository**: https://github.com/nampallyharish4/Cyepro-Solutions.git
 - **Database Architecture**: Managed **Supabase (PostgreSQL)** instance.
 
 ## Production Configuration

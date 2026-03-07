@@ -3,6 +3,7 @@ import { DecisionEngine } from './DecisionEngine';
 
 export class SchedulerService {
   private static isRunning = false;
+  private static readonly MAX_RETRIES = 3;
 
   /**
    * Start the background job for processing LATER queue
@@ -21,7 +22,7 @@ export class SchedulerService {
     try {
       const now = new Date().toISOString();
 
-      // 1. Get items that are ready to be processed
+      // 1. Get WAITING items that are ready to be processed
       const { data: queueItems, error } = await supabase
         .from('deferred_queue')
         .select('*, notification_events(*)')
@@ -30,14 +31,25 @@ export class SchedulerService {
         .limit(10); // Process in batches
 
       if (error) throw error;
-      if (!queueItems || queueItems.length === 0) {
+
+      // 2. Also retry FAILED items that haven't exceeded max retries
+      const { data: failedItems } = await supabase
+        .from('deferred_queue')
+        .select('*, notification_events(*)')
+        .eq('status', 'FAILED')
+        .lt('retry_count', this.MAX_RETRIES)
+        .limit(5);
+
+      const allItems = [...(queueItems || []), ...(failedItems || [])];
+
+      if (allItems.length === 0) {
         this.isRunning = false;
         return;
       }
 
-      console.log(`Processing ${queueItems.length} items from LATER queue...`);
+      console.log(`Processing ${allItems.length} items from LATER queue...`);
 
-      for (const item of queueItems) {
+      for (const item of allItems) {
         await this.handleQueueItem(item);
       }
     } catch (err) {
@@ -49,8 +61,21 @@ export class SchedulerService {
 
   private static async handleQueueItem(item: any) {
     try {
-      // Logic for re-processing or final delivery
-      // For the demo: Move it to SENT
+      // Optimistic concurrency guard — only claim items still in WAITING or FAILED
+      const { data: claimed, error: claimError } = await supabase
+        .from('deferred_queue')
+        .update({ status: 'PROCESSING' })
+        .eq('id', item.id)
+        .in('status', ['WAITING', 'FAILED'])
+        .select()
+        .single();
+
+      if (claimError || !claimed) {
+        // Another instance already claimed this item
+        return;
+      }
+
+      // Deliver the notification (in production this would push to a channel)
       await supabase
         .from('deferred_queue')
         .update({ status: 'SENT' })
@@ -67,11 +92,30 @@ export class SchedulerService {
       ]);
     } catch (e) {
       console.error(`Failed to process queue item ${item.id}:`, e);
-      // Increment retry or mark as FAILED
-      await supabase
-        .from('deferred_queue')
-        .update({ status: 'FAILED', retry_count: (item.retry_count || 0) + 1 })
-        .eq('id', item.id);
+      const newRetryCount = (item.retry_count || 0) + 1;
+
+      if (newRetryCount >= this.MAX_RETRIES) {
+        // Permanently failed — mark as DEAD_LETTER for manual review
+        await supabase
+          .from('deferred_queue')
+          .update({ status: 'DEAD_LETTER', retry_count: newRetryCount })
+          .eq('id', item.id);
+
+        await supabase.from('audit_logs').insert([
+          {
+            event_id: item.event_id,
+            decision: 'FAILED',
+            reason: `Deferred item exhausted ${this.MAX_RETRIES} retries, moved to dead letter.`,
+            is_fallback: false,
+          },
+        ]);
+      } else {
+        // Mark as FAILED for retry on next scheduler tick
+        await supabase
+          .from('deferred_queue')
+          .update({ status: 'FAILED', retry_count: newRetryCount })
+          .eq('id', item.id);
+      }
     }
   }
 }

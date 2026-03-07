@@ -11,9 +11,10 @@ The system flows through a **Deterministic -> Intelligent -> Fail-Safe** pipelin
 5. **Fail-Safe Circuit Breaker**: Hard 3-second timeout. If AI fails, an exponential retry kicks in. If that fails, a circuit breaker trips, and the engine defaults to a "Safe LATER" priority with a fallback reason to guarantee zero data loss.
 
 ## Live Deployments
-- **Frontend (Vercel)**: `[Paste your Vercel URL here]`
-- **Backend (Render)**: `https://cyepro-notification-engine-backend.onrender.com`
-- **Health Endpoint**: `https://cyepro-notification-engine-backend.onrender.com/health`
+- **Frontend (Vercel)**: https://cyepro-solutions.vercel.app
+- **Backend (Render)**: https://cyepro-notification-engine-backend.onrender.com
+- **Health Endpoint**: https://cyepro-notification-engine-backend.onrender.com/health
+- **GitHub Repository**: https://github.com/nampallyharish4/Cyepro-Solutions.git
 
 ## Tech Stack
 - **Frontend**: Next.js 16 (App Router) with Tailwind CSS, Framer Motion, and Recharts. Chosen for its performance, SEO-friendliness, and rapid development of premium management consoles.

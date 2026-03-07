@@ -40,14 +40,13 @@ export class DecisionEngine {
       throw new Error(`Failed to save event: ${saveError?.message}`);
     }
 
-    // Return here to the client, but continue processing
-    // In a real app, this would be queued (e.g., BullMQ)
-    this.executeEnginePipeline(savedEvent.id);
+    // Return here to the client, but continue processing asynchronously
+    this.executeEnginePipeline(savedEvent.id, event.user_id);
 
     return savedEvent;
   }
 
-  static async executeEnginePipeline(eventId: string) {
+  static async executeEnginePipeline(eventId: string, userId?: string) {
     try {
       // Fetch full event
       const { data: event } = await supabase
@@ -57,6 +56,16 @@ export class DecisionEngine {
         .single();
 
       if (!event) return;
+
+      // 0. Expiry Check — drop events that have already expired
+      if (event.expires_at && new Date(event.expires_at) < new Date()) {
+        await this.finalizeDecision(
+          eventId,
+          'NEVER',
+          'Event expired before processing (expires_at in the past)',
+        );
+        return;
+      }
 
       // 1. Deduplication (Exact)
       if (event.dedupe_key) {
@@ -85,7 +94,8 @@ export class DecisionEngine {
       });
 
       // Filter out the current event itself if the RPC happens to return it
-      const actualNearDups = nearDups?.filter((n: any) => n.id !== eventId) || [];
+      const actualNearDups =
+        nearDups?.filter((n: any) => n.id !== eventId) || [];
 
       if (actualNearDups.length > 0) {
         await this.finalizeDecision(
@@ -96,11 +106,12 @@ export class DecisionEngine {
         return;
       }
 
-      // 4. Rule Evaluation
+      // 3. Rule Evaluation — deterministic rules always checked before AI
       const { data: rules } = await supabase
         .from('rules')
         .select('*')
         .eq('is_active', true)
+        .neq('condition_type', 'system_setting')
         .order('priority_order', { ascending: false });
 
       if (rules) {
@@ -117,7 +128,7 @@ export class DecisionEngine {
         }
       }
 
-      // 5. Fatigue Check (Alert Fatigue)
+      // 4. Fatigue Check (per-user Alert Fatigue)
       if (await this.isFatigued(event.user_id)) {
         await this.finalizeDecision(
           eventId,
@@ -127,12 +138,11 @@ export class DecisionEngine {
         return;
       }
 
-      // 3. AI / LLM Logic (Async)
-      // Since it's async, we'll mark it as UNDER_ANALYSIS and call AI
+      // 5. AI / LLM Logic (Async) — with priority_hint context
       await this.runAIClassification(event);
     } catch (error) {
       console.error('Pipeline Error:', error);
-      // Fallback
+      // Fallback — never lose the event
       await this.finalizeDecision(
         eventId,
         'LATER',
@@ -151,6 +161,15 @@ export class DecisionEngine {
         return event.title
           .toLowerCase()
           .includes(rule.condition_value.toLowerCase());
+      case 'metadata_match': {
+        // Supports dot-notation key matching in event metadata JSON
+        // condition_value format: "key=value" e.g. "severity=critical"
+        const parts = rule.condition_value.split('=');
+        if (parts.length !== 2) return false;
+        const [key, val] = parts;
+        const meta = event.metadata || {};
+        return String(meta[key]).toLowerCase() === val.toLowerCase();
+      }
       default:
         return false;
     }
@@ -158,13 +177,14 @@ export class DecisionEngine {
 
   private static async isFatigued(userId: string): Promise<boolean> {
     const WINDOW_MINUTES = 60;
-    let MAX_NOTIFICATIONS = 5; 
+    let MAX_NOTIFICATIONS = 5;
 
     // Fetch dynamic fatigue limit from DB rules
     const { data: fatigueRule } = await supabase
       .from('rules')
       .select('condition_value')
       .eq('name', 'FATIGUE_LIMIT')
+      .eq('is_active', true)
       .single();
 
     if (fatigueRule && fatigueRule.condition_value) {
@@ -175,18 +195,19 @@ export class DecisionEngine {
       Date.now() - 1000 * 60 * WINDOW_MINUTES,
     ).toISOString();
 
-    const { count } = await supabase
+    // Per-user fatigue — count NOW decisions for THIS specific user
+    const { data: userEvents } = await supabase
       .from('audit_logs')
-      .select('id', { count: 'exact', head: true })
+      .select('id, notification_events!inner(user_id)')
       .eq('decision', 'NOW')
+      .eq('notification_events.user_id', userId)
       .gte('processed_at', startTime);
 
-    return (count || 0) >= MAX_NOTIFICATIONS;
+    const count = userEvents?.length || 0;
+    return count >= MAX_NOTIFICATIONS;
   }
 
   private static async runAIClassification(event: any) {
-    // Placeholder for LLM service call
-    // Real implementation will use OpenAI/Anthropic
     try {
       const classification = await AIService.classify(event);
       await this.finalizeDecision(
@@ -204,6 +225,11 @@ export class DecisionEngine {
         event.id,
         'LATER',
         'AI Unresponsive: Fallback to LATER',
+        null,
+        true,
+        'fallback-engine',
+        0,
+        true,
       );
     }
   }
@@ -218,7 +244,7 @@ export class DecisionEngine {
     aiConfidence: number | null = null,
     isFallback: boolean = false,
   ) {
-    // 1. Log to Audit Log
+    // 1. Log to Audit Log (append-only)
     await supabase.from('audit_logs').insert([
       {
         event_id: eventId,

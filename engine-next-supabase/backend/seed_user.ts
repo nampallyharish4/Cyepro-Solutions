@@ -4,50 +4,87 @@ import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
-const supabase = createClient(process.env.SUPABASE_URL as string, process.env.SUPABASE_SERVICE_ROLE_KEY as string);
+const supabase = createClient(
+  process.env.SUPABASE_URL as string,
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string,
+);
 
 async function seed() {
-  console.log("Seeding Admin User...");
+  console.log('Seeding Admin User...');
   const passwordHash = await bcrypt.hash('password123', 10);
-  
-  const { data, error } = await supabase
-    .from('users')
-    .upsert(
-      { email: 'admin@cyepro.com', password_hash: passwordHash, role: 'admin' },
-      { onConflict: 'email' }
-    )
-    .select();
 
-  if (error) {
-    console.error("Error seeding user:", error.message);
+  // Upsert admin user — creates or updates without hard deleting
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', 'admin@cyepro.com')
+    .single();
+
+  if (existingUser) {
+    await supabase
+      .from('users')
+      .update({ password_hash: passwordHash, role: 'admin' })
+      .eq('email', 'admin@cyepro.com');
+    console.log('✅ Admin user updated! email: admin@cyepro.com');
   } else {
-    console.log("✅ Admin user seeded! email: admin@cyepro.com");
+    const { error } = await supabase
+      .from('users')
+      .insert({
+        email: 'admin@cyepro.com',
+        password_hash: passwordHash,
+        role: 'admin',
+      });
+    if (error) {
+      console.error('Error seeding user:', error.message);
+    } else {
+      console.log('✅ Admin user created! email: admin@cyepro.com');
+    }
   }
 
-  console.log("Seeding Fatigue Limit Rule...");
-  const { error: ruleError } = await supabase
+  // Seed operator user
+  const { data: existingOp } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', 'operator@cyepro.com')
+    .single();
+
+  if (!existingOp) {
+    const opHash = await bcrypt.hash('operator123', 10);
+    await supabase
+      .from('users')
+      .insert({
+        email: 'operator@cyepro.com',
+        password_hash: opHash,
+        role: 'operator',
+      });
+    console.log('✅ Operator user created! email: operator@cyepro.com');
+  }
+
+  console.log('Seeding Fatigue Limit Rule...');
+  // Soft-upsert: deactivate old ones, insert fresh — never hard delete
+  const { data: existingFatigue } = await supabase
     .from('rules')
-    .upsert({
+    .select('id')
+    .eq('name', 'FATIGUE_LIMIT')
+    .eq('is_active', true)
+    .single();
+
+  if (existingFatigue) {
+    await supabase
+      .from('rules')
+      .update({ condition_value: '5' })
+      .eq('id', existingFatigue.id);
+    console.log('✅ Fatigue limit rule updated!');
+  } else {
+    await supabase.from('rules').insert({
       name: 'FATIGUE_LIMIT',
       condition_type: 'system_setting',
       condition_value: '5',
       target_priority: 'SYSTEM',
-      priority_order: -1
-    }, { onConflict: 'name' }) // wait, rules doesn't have unique constraint on name, but it's fine, we can query by name. Let's just delete existing first 
-    .select();
-
-   // Delete existing if we don't know ID
-  await supabase.from('rules').delete().eq('name', 'FATIGUE_LIMIT');
-
-  await supabase.from('rules').insert({
-      name: 'FATIGUE_LIMIT',
-      condition_type: 'system_setting',
-      condition_value: '5',
-      target_priority: 'SYSTEM',
-      priority_order: -1
-  });
-
-  console.log("✅ Fatigue limit rule seeded!");
+      priority_order: -1,
+    });
+    console.log('✅ Fatigue limit rule created!');
+  }
 }
 
 seed();
