@@ -264,7 +264,7 @@ export default function Dashboard() {
                   <Tooltip
                     contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px' }}
                     itemStyle={{ color: '#fff' }}
-                    labelFormatter={(v: string) => v.replace('T', ' ')}
+                    labelFormatter={(v) => String(v).replace('T', ' ')}
                   />
                   <Legend wrapperStyle={{ fontSize: '11px', color: '#a1a1aa' }} />
                   <Area type="monotone" dataKey="now" name="NOW" stroke="#10b981" fillOpacity={1} fill="url(#colorNow)" />
