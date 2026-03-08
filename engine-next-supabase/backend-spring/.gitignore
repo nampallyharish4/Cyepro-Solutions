@@ -1,0 +1,14 @@
+target/
+*.class
+*.jar
+*.log
+.env
+.env.*
+!.env.example
+.idea/
+*.iml
+.mvn/
+mvnw
+mvnw.cmd
+TestConnection.java
+TestConnection.class

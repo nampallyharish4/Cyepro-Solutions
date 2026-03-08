@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: notification-engine-spring
+    runtime: docker
+    dockerfilePath: ./engine-next-supabase/backend-spring/Dockerfile
+    dockerContext: ./engine-next-supabase/backend-spring
+    plan: free
+    envVars:
+      - key: PORT
+        value: '5000'
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: MODEL_NAME
+        value: 'llama-3.3-70b-versatile'
+      - key: CORS_ORIGINS
+        sync: false

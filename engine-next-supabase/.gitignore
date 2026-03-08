@@ -34,3 +34,9 @@ Thumbs.db
 .vercel
 *.tsbuildinfo
 next-env.d.ts
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.iml
