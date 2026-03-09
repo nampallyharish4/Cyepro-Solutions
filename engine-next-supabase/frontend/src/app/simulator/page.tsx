@@ -282,7 +282,7 @@ export default function Simulator() {
             <div className="flex items-center justify-between mb-10">
                <div className="flex items-center gap-3">
                   <Fingerprint className="h-5 w-5 text-purple-400" />
-                  <h3 className="text-sm font-black text-white uppercase tracking-[0.3em] italic">Forensic Analysis</h3>
+                  <h3 className="text-sm font-black text-white uppercase tracking-[0.3em] italic">Analysis</h3>
                </div>
             </div>
 

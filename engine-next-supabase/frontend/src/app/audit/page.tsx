@@ -98,7 +98,7 @@ export default function AuditArchive() {
             Audit Archive
           </h1>
         </div>
-        <p className="text-zinc-500 font-medium ml-1">Forensic analysis of every engine decision.</p>
+        <p className="text-zinc-500 font-medium ml-1">Analysis of every engine decision.</p>
       </div>
 
       {/* Controls */}
