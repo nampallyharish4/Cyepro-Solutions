@@ -299,4 +299,113 @@ export class NotificationController {
       return res.status(500).json({ error: 'Force send failed' });
     }
   }
+  /**
+   * Get Intelligence Analytics
+   */
+  static async getAnalytics(req: Request, res: Response) {
+    try {
+      // 1. Rule Efficiency (Hit counts per rule)
+      const { data: ruleStats } = await supabase.rpc('get_rule_efficiency');
+
+      // 2. Noise Source Attribution (NEVER/LATER by source/type)
+      const { data: noiseStats } = await supabase.rpc('get_noise_sources');
+
+      // 3. AI Performance (Avg confidence, fallback rate)
+      const { data: aiPerf } = await supabase
+        .from('audit_logs')
+        .select('ai_confidence, is_fallback')
+        .eq('ai_used', true)
+        .gte('processed_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+      const avgConfidence = aiPerf && aiPerf.length > 0
+        ? aiPerf.reduce((acc, curr) => acc + (curr.ai_confidence || 0), 0) / aiPerf.length
+        : 0;
+      
+      const fallbackRate = aiPerf && aiPerf.length > 0
+        ? aiPerf.filter(a => a.is_fallback).length / aiPerf.length
+        : 0;
+
+      return res.json({
+        ruleEfficiency: ruleStats || [],
+        noiseSources: noiseStats || [],
+        aiMetrics: {
+          avgConfidence,
+          fallbackRate,
+          totalAnalyses: aiPerf?.length || 0
+        }
+      });
+    } catch (error) {
+       console.error('Analytics Error:', error);
+       return res.status(500).json({ error: 'Failed to compute intelligence analytics' });
+    }
+  }
+
+  /**
+   * System Settings Management
+   */
+  static async getSettings(req: Request, res: Response) {
+    try {
+      const { data } = await supabase.from('system_settings').select('*');
+      return res.json(data || []);
+    } catch (e) {
+      return res.status(500).json({ error: 'Settings fetch failed' });
+    }
+  }
+
+  static async updateSettings(req: Request, res: Response) {
+    try {
+      const { key, value, description } = req.body;
+      const { data, error } = await supabase
+        .from('system_settings')
+        .upsert({ key, value, description, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return res.json(data);
+    } catch (e) {
+      return res.status(500).json({ error: 'Settings update failed' });
+    }
+  }
+
+  /**
+   * Rule Sandbox: Dry Run Logic
+   */
+  static async dryRunRule(req: Request, res: Response) {
+    try {
+      const { rule, event } = req.body;
+      if (!rule || !event) return res.status(400).json({ error: 'Rule and event required' });
+
+      const { condition_type, condition_value } = rule;
+      const { source, event_type, title, metadata } = event;
+      let matched = false;
+
+      switch (condition_type) {
+        case 'source':
+          matched = source?.toLowerCase() === condition_value?.toLowerCase();
+          break;
+        case 'type':
+          matched = event_type?.toLowerCase() === condition_value?.toLowerCase();
+          break;
+        case 'title_contains':
+          matched = title?.toLowerCase().includes(condition_value?.toLowerCase());
+          break;
+        case 'metadata_match': {
+          const [k, v] = (condition_value || '').split('=');
+          matched = metadata?.[k]?.toString() === v;
+          break;
+        }
+      }
+
+      return res.json({
+        matched,
+        decision: matched ? rule.target_priority : 'SKIPPED',
+        reason: matched 
+          ? `Sandbox Success: Matched "${rule.name}"` 
+          : `Sandbox Skip: Payload did not satisfy "${condition_type}" criteria.`
+      });
+    } catch (e) {
+      return res.status(500).json({ error: 'Dry run execution failed' });
+    }
+  }
 }

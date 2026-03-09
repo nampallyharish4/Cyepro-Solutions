@@ -161,9 +161,16 @@ export default function Login() {
     navigateTo?: string;
   }>(null);
   const [form, setForm] = useState({
-    email: 'admin@cyepro.com',
-    password: 'password123',
+    email: '',
+    password: '',
   });
+
+  const handleCloseModal = () => {
+    if (modal?.type === 'success') {
+      setForm({ email: '', password: '' });
+    }
+    setModal(null);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,7 +232,7 @@ export default function Login() {
           message={modal.message}
           email={modal.email}
           role={modal.role}
-          onClose={() => setModal(null)}  // Stay — discard credentials, stay on login
+          onClose={handleCloseModal}  // Stay — discard credentials, stay on login
           onContinue={
             modal.navigateTo
               ? () => {

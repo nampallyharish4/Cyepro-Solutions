@@ -77,7 +77,7 @@ export class AIService {
   /**
    * Primary classification — Groq (fast) → Gemini (fallback provider) → Safe fallback
    */
-  static async classify(event: any): Promise<{
+  static async classify(event: any, modelOverride?: string): Promise<{
     priority: Priority;
     reason: string;
     confidence: number;
@@ -89,7 +89,7 @@ export class AIService {
     }
 
     const groqKey = process.env.GROQ_API_KEY;
-    const modelName = groqKey ? (process.env.GROQ_MODEL || 'llama-3.3-70b-versatile') : this.MODEL_NAME;
+    const modelName = modelOverride || (groqKey ? (process.env.GROQ_MODEL || 'llama-3.3-70b-versatile') : this.MODEL_NAME);
 
     const systemPrompt = `You are a Notification Prioritization Engine. Classify each notification into exactly one category.
 

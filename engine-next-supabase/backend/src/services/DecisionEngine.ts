@@ -18,10 +18,6 @@ export interface NotificationEvent {
 export class DecisionEngine {
   /**
    * Main entry point for a new event
-   * 1. Synchronous validation + Deduplication
-   * 2. Rule evaluation
-   * 3. AI classification (asynchronous)
-   * 4. Audit logging
    */
   static async processEvent(event: NotificationEvent) {
     // 1. Initial storage
@@ -41,12 +37,17 @@ export class DecisionEngine {
     }
 
     // Return here to the client, but continue processing asynchronously
-    this.executeEnginePipeline(savedEvent.id, event.user_id);
+    this.executeEnginePipeline(savedEvent.id);
 
     return savedEvent;
   }
 
-  static async executeEnginePipeline(eventId: string, userId?: string) {
+  static async executeEnginePipeline(eventId: string) {
+    const trace: any[] = [];
+    const addTrace = (stage: string, status: string, details: string) => {
+      trace.push({ stage, status, details, timestamp: new Date().toISOString() });
+    };
+
     try {
       // Fetch full event
       const { data: event } = await supabase
@@ -57,15 +58,24 @@ export class DecisionEngine {
 
       if (!event) return;
 
-      // 0. Expiry Check — drop events that have already expired
+      // 0. Expiry Check
       if (event.expires_at && new Date(event.expires_at) < new Date()) {
+        addTrace('EXPIRY_CHECK', 'TRIPPED', 'Expiration date in the past');
         await this.finalizeDecision(
           eventId,
           'NEVER',
           'Event expired before processing (expires_at in the past)',
+          null, false, null, null, false, trace
         );
         return;
       }
+      addTrace('EXPIRY_CHECK', 'PASSED', 'Event is within validity window');
+
+      // Fetch System Settings
+      const { data: settings } = await supabase.from('system_settings').select('key, value');
+      const getSetting = (key: string, def: string) => settings?.find(s => s.key === key)?.value || def;
+      
+      const dedupeThreshold = parseFloat(getSetting('DEDUPE_THRESHOLD', '0.8'));
 
       // 1. Deduplication (Exact)
       if (event.dedupe_key) {
@@ -77,36 +87,41 @@ export class DecisionEngine {
           .limit(1);
 
         if (existing && existing.length > 0) {
+          addTrace('EXACT_DEDUPE', 'TRIPPED', `Matched key: ${event.dedupe_key}`);
           await this.finalizeDecision(
             eventId,
             'NEVER',
             'Duplicate event (Matched dedupe_key)',
+            null, false, null, null, false, trace
           );
           return;
         }
       }
+      addTrace('EXACT_DEDUPE', 'PASSED', 'No exact key match found');
 
-      // 2. Near-duplicate detection (PostgreSQL pg_trgm similarity)
+      // 2. Near-duplicate detection
       const { data: nearDups } = await supabase.rpc('find_near_duplicates', {
         p_user_id: event.user_id,
         p_title: event.title,
-        p_threshold: 0.8,
+        p_threshold: dedupeThreshold,
       });
 
-      // Filter out the current event itself if the RPC happens to return it
-      const actualNearDups =
-        nearDups?.filter((n: any) => n.id !== eventId) || [];
+      const actualNearDups = nearDups?.filter((n: any) => n.id !== eventId) || [];
 
       if (actualNearDups.length > 0) {
+        const sim = actualNearDups[0].similarity;
+        addTrace('NEAR_DEDUPE', 'TRIPPED', `Similarity ${sim} above threshold ${dedupeThreshold}`);
         await this.finalizeDecision(
           eventId,
           'NEVER',
-          `Near-duplicate detected (Similarity: ${actualNearDups[0].similarity})`,
+          `Near-duplicate detected (Similarity: ${sim})`,
+          null, false, null, null, false, trace
         );
         return;
       }
+      addTrace('NEAR_DEDUPE', 'PASSED', `No near-duplicates found above threshold ${dedupeThreshold}`);
 
-      // 3. Rule Evaluation — deterministic rules always checked before AI
+      // 3. Rule Evaluation
       const { data: rules } = await supabase
         .from('rules')
         .select('*')
@@ -114,39 +129,53 @@ export class DecisionEngine {
         .neq('condition_type', 'system_setting')
         .order('priority_order', { ascending: false });
 
+      let ruleMatched = false;
       if (rules) {
         for (const rule of rules) {
           if (this.evaluateRule(event, rule)) {
+            addTrace('RULE_ENGINE', 'MATCHED', `Rule: ${rule.name} (#${rule.id})`);
             await this.finalizeDecision(
               eventId,
               rule.target_priority,
               `Rule matched: ${rule.name}`,
               rule.id,
+              false, null, null, false, trace
             );
-            return;
+            ruleMatched = true;
+            break;
           }
         }
       }
+      
+      if (ruleMatched) return;
+      addTrace('RULE_ENGINE', 'SKIPPED', 'No active rules matched event criteria');
 
-      // 4. Fatigue Check (per-user Alert Fatigue)
-      if (await this.isFatigued(event.user_id)) {
+      // 4. Fatigue Check
+      const fatigueThreshold = parseInt(getSetting('FATIGUE_LIMIT', '5'));
+      if (await this.isFatigued(event.user_id, fatigueThreshold)) {
+        addTrace('FATIGUE_LIMIT', 'TRIPPED', `User exceeded threshold of ${fatigueThreshold} NOW events / 60m`);
         await this.finalizeDecision(
           eventId,
           'LATER',
           'Alert Fatigue: User reached notification limit in current window.',
+          null, false, null, null, false, trace
         );
         return;
       }
+      addTrace('FATIGUE_LIMIT', 'PASSED', `User within threshold (${fatigueThreshold})`);
 
-      // 5. AI / LLM Logic (Async) — with priority_hint context
-      await this.runAIClassification(event);
-    } catch (error) {
+      // 5. AI classification
+      const activeModel = getSetting('AI_MODEL', process.env.MODEL_NAME || '');
+      addTrace('AI_CLASSIFICATION', 'INIT', `Routing to intelligent analysis [Model: ${activeModel || 'Default'}]`);
+      await this.runAIClassification(event, trace, activeModel);
+    } catch (error: any) {
       console.error('Pipeline Error:', error);
-      // Fallback — never lose the event
+      addTrace('ERROR_HANDLER', 'CRITICAL', error.message || 'Unknown processing error');
       await this.finalizeDecision(
         eventId,
         'LATER',
         'Internal Error: Processing failed, defaulted to LATER',
+        null, false, null, null, false, trace
       );
     }
   }
@@ -158,12 +187,8 @@ export class DecisionEngine {
       case 'type':
         return event.event_type === rule.condition_value;
       case 'title_contains':
-        return event.title
-          .toLowerCase()
-          .includes(rule.condition_value.toLowerCase());
+        return event.title.toLowerCase().includes(rule.condition_value.toLowerCase());
       case 'metadata_match': {
-        // Supports dot-notation key matching in event metadata JSON
-        // condition_value format: "key=value" e.g. "severity=critical"
         const parts = rule.condition_value.split('=');
         if (parts.length !== 2) return false;
         const [key, val] = parts;
@@ -175,27 +200,10 @@ export class DecisionEngine {
     }
   }
 
-  private static async isFatigued(userId: string): Promise<boolean> {
+  private static async isFatigued(userId: string, limit: number): Promise<boolean> {
     const WINDOW_MINUTES = 60;
-    let MAX_NOTIFICATIONS = 5;
+    const startTime = new Date(Date.now() - 1000 * 60 * WINDOW_MINUTES).toISOString();
 
-    // Fetch dynamic fatigue limit from DB rules
-    const { data: fatigueRule } = await supabase
-      .from('rules')
-      .select('condition_value')
-      .eq('name', 'FATIGUE_LIMIT')
-      .eq('is_active', true)
-      .single();
-
-    if (fatigueRule && fatigueRule.condition_value) {
-      MAX_NOTIFICATIONS = parseInt(fatigueRule.condition_value) || 5;
-    }
-
-    const startTime = new Date(
-      Date.now() - 1000 * 60 * WINDOW_MINUTES,
-    ).toISOString();
-
-    // Per-user fatigue — count NOW decisions for THIS specific user
     const { data: userEvents } = await supabase
       .from('audit_logs')
       .select('id, notification_events!inner(user_id)')
@@ -203,13 +211,19 @@ export class DecisionEngine {
       .eq('notification_events.user_id', userId)
       .gte('processed_at', startTime);
 
-    const count = userEvents?.length || 0;
-    return count >= MAX_NOTIFICATIONS;
+    return (userEvents?.length || 0) >= limit;
   }
 
-  private static async runAIClassification(event: any) {
+  private static async runAIClassification(event: any, trace: any[], modelOverride?: string) {
     try {
-      const classification = await AIService.classify(event);
+      const classification = await AIService.classify(event, modelOverride);
+      trace.push({ 
+        stage: 'AI_RESPONSE', 
+        status: classification.priority, 
+        details: `Model: ${classification.modelName}, Confidence: ${classification.confidence}`,
+        timestamp: new Date().toISOString()
+      });
+
       await this.finalizeDecision(
         event.id,
         classification.priority,
@@ -219,17 +233,15 @@ export class DecisionEngine {
         classification.modelName,
         classification.confidence,
         classification.isFallback,
+        trace
       );
-    } catch (e) {
+    } catch (e: any) {
+      trace.push({ stage: 'AI_ERROR', status: 'FAILED', details: e.message || 'AI timeout', timestamp: new Date().toISOString() });
       await this.finalizeDecision(
         event.id,
         'LATER',
         'AI Unresponsive: Fallback to LATER',
-        null,
-        true,
-        'fallback-engine',
-        0,
-        true,
+        null, true, 'fallback-engine', 0, true, trace
       );
     }
   }
@@ -243,6 +255,7 @@ export class DecisionEngine {
     aiModel: string | null = null,
     aiConfidence: number | null = null,
     isFallback: boolean = false,
+    trace: any[] = []
   ) {
     // 1. Log to Audit Log (append-only)
     await supabase.from('audit_logs').insert([
@@ -255,21 +268,22 @@ export class DecisionEngine {
         ai_model: aiModel,
         ai_confidence: aiConfidence,
         is_fallback: isFallback,
+        trace,
       },
     ]);
 
     // 2. Update Event Status
-    await supabase
-      .from('notification_events')
-      .update({ status: 'PROCESSED' })
-      .eq('id', eventId);
+    await supabase.from('notification_events').update({ status: 'PROCESSED' }).eq('id', eventId);
 
     // 3. Handle LATER queue
     if (decision === 'LATER') {
+      const { data: settings } = await supabase.from('system_settings').select('value').eq('key', 'LATER_DELAY_MIN').single();
+      const delay = parseInt(settings?.value || '30');
+      
       await supabase.from('deferred_queue').insert([
         {
           event_id: eventId,
-          process_after: new Date(Date.now() + 1000 * 60 * 30).toISOString(), // 30 min later
+          process_after: new Date(Date.now() + 1000 * 60 * delay).toISOString(),
           status: 'WAITING',
         },
       ]);

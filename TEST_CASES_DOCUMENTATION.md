@@ -35,7 +35,8 @@ This document provides **50+ structured test cases** covering every requirement 
 15. [End-to-End Happy Path](#-15-end-to-end-happy-path)
 16. [Simulator UI — Copy-Paste Test Cases](#️-16-simulator-ui--copy-paste-test-cases)
 17. [UX & Auth Flow Tests (Phase 4)](#-17-ux--auth-flow-tests-phase-4)
-18. [Verification Checklist](#-verification-checklist)
+18. [Intelligence & Control (Phase 5)](#-18-intelligence--control-phase-5)
+19. [Verification Checklist](#-verification-checklist)
 
 ---
 
@@ -717,7 +718,7 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 
 ---
 
-## �️ 16. Simulator UI — Copy-Paste Test Cases
+## ️ 16. Simulator UI — Copy-Paste Test Cases
 
 > **Ready-to-use test inputs for the frontend Simulator page.** Each test lists the **exact values** to type into each field. Fields not listed can be left as default.
 >
@@ -976,6 +977,60 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 
 ---
 
+## 🧠 18. Intelligence & Control (Phase 5)
+
+### TC-18.1: Rule Sandbox — Validate Match (Dry Run)
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Navigate to **Rules Protocol** | All active rules visible |
+| 2 | Click **Create Rule** | Drawer opens |
+| 3 | Define: Type = `title_contains`, Value = `Urgent` | — |
+| 4 | Scroll to **Validation Sandbox** | Mock fields visible |
+| 5 | Fill Sandbox: Title = `URGENT ACTION` | — |
+| 6 | Click **Dry Run Logic** | Result: **MATCHED** with decision **NOW** |
+| 7 | Fill Sandbox: Title = `Normal Update` | — |
+| 8 | Click **Dry Run Logic** | Result: **SKIPPED** (engine would use AI) |
+| **Validates** | Rule Sandbox simulates engine logic without DB side-effects |
+
+### TC-18.2: Intelligence Tuning — Dynamic threshold
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Navigate to **Intelligence Tuning** (Settings) | Current config visible |
+| 2 | Update **Fatigue Limit** from 5 to 2 | Success toast appears |
+| 3 | Use Simulator: Send 3 NOW events | 1-2 are NOW, 3rd is LATER (Fatigue) |
+| **Validates** | Zero-restart dynamic configuration updates |
+
+### TC-18.3: Forensic Simulator — Decision Stream
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Navigate to **System Simulator** | New forensic UI visible |
+| 2 | Submit a packet | Center card shows real-time "Orchestrating..." |
+| 3 | After result | **Forensic Analysis** displays: Global Event ID, Reasoning, Pipeline Consensus icon |
+| 4 | Check **Decision Stream** | History card shows the latest outcome with live timestamp |
+| 5 | Click a history item | Re-renders the **Forensic Analysis** for that historical event |
+
+### TC-18.4: Auth Hardening — Clean Slate Policy
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Go to **Login** → fill credentials → Sign In | Success modal |
+| 2 | Click **"Stay"** | Modal closes AND **Username/Password fields are cleared** |
+| 3 | Refresh page | Fields remain empty |
+| **Validates** | Security: "Stay" removes sensitive data from memory vs simply hiding it |
+
+### TC-18.5: System Pulse — Vitality Monitor
+
+| Check | Target | Expected |
+|-------|--------|----------|
+| 1 | Sidebar Pulse Widget | Pulse dot is animating (heartbeat) |
+| 2 | Vitality Label | Shows currently active AI architecture (e.g., Llama/Gemini) |
+| 3 | Health Refresh | Navigate between pages; Pulse remains persistent and accurate |
+
+---
+
 ## 🚦 Verification Checklist
 
 ### Audit & Logging
@@ -1017,29 +1072,23 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 - [ ] Fallback always produces `LATER` with `is_fallback: true`
 - [ ] Health endpoint accurately reports circuit state
 
-### UI Pages
+### Intelligence & Control (Phase 5)
 
-- [ ] Login — shows both admin and operator credentials on the page
-- [ ] Login — "Stay" button keeps user on login page (no auto-login)
-- [ ] Login — "Enter System" commits token and navigates to dashboard
-- [ ] Simulator — all 10 input fields present, async result display
-- [ ] Dashboard — auto-refreshes, health badges, metric cards, charts
-- [ ] Audit — searchable, filterable, paginated, expandable rows
-- [ ] LATER Queue — status tabs, search, pagination, force-send
-- [ ] Rules — CRUD, fatigue threshold editable, mobile cards, API error banner with Retry
+- [ ] Rule Sandbox: Dry run successfully identifies matching vs skipping protocols
+- [ ] Rule Sandbox: Dry run does NOT create actual audit logs or database records
+- [ ] Intelligence Tuning: Settings update (Fatigue/Dedupe) apply instantly to next event
+- [ ] Forensic Simulator: Real-time decision stream displays historical telemetry correctly
+- [ ] Forensic Simulator: Decision vector icons matches the outcome (NOW=Rocket, LATER=Clock, etc.)
+- [ ] Auth Gateway: "Stay" action in login success modal wipes the form state
+- [ ] Sidebar Pulse: Animating heartbeat provides visual confirmation of engine status
+- [ ] Sidebar Pulse: Displays the correct system-active AI model string
 
-### UX & Auth Flow (Phase 4)
+### UX & Phase-specific
 
-- [ ] Logout button opens confirmation modal — only confirmed logout clears session
-- [ ] Auth guard shows full-screen centered triple-ring spinner while verifying token
-- [ ] Audit Log shows `PageLoader` spinner during initial data fetch
-- [ ] LATER Queue shows `PageLoader` spinner during initial data fetch
-- [ ] Rules page (desktop) shows skeleton shimmer rows while loading
-- [ ] Rules page (mobile) shows skeleton shimmer cards while loading
-- [ ] Rules page shows error banner with Retry when API is unreachable
-- [ ] Signup: live password strength meter updates as user types
-- [ ] Signup: duplicate email shows error modal
-- [ ] Signup: success modal redirects to `/login` (not dashboard)
+- [ ] PageLoader (Triple-ring) used for every data-fetching operation
+- [ ] Sidebar is accurately pinned (sticky) in desktop and mobile views
+- [ ] Audit Log pagination limited strictly to 4 items per page for visual flow
+- [ ] All `.md` documents updated to reflect Phase 5 capabilities
 
 ### Deployment
 

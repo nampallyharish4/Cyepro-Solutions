@@ -70,14 +70,25 @@ This document outlines the phased development of the Notification Prioritization
 
 ---
 
-## What I Would Do Differently
+## Phase 5: High-Fidelity Intelligence & Advanced Control
 
-1. **WebSocket Instead of Polling**: The simulator polls at 800ms intervals for classification results. A WebSocket or SSE connection would reduce overhead and deliver results instantly. Pragmatic tradeoff for build speed.
+- **Goal**: Transform the dashboard into a strategic intelligence hub and provide advanced control over rule logic.
+- **Milestones**:
+  - [x] **Command Dashboard 2.0** — High-fidelity analytics: Area charts for cognitive trends, Pie charts for logic distribution, and real-time AI Confidence monitors.
+  - [x] **Rule Efficiency Analytics** — Integrated hit-rate tracking for deterministic protocols to measure rule ROI.
+  - [x] **Noise Attribution Engine** — Automated identification of high-volume sources contributing to NEVER/LATER outcomes (spam detection).
+  - [x] **Rule Sandbox (Dry Run)** — Full-flight validation suite in the Rules Manager; simulate packet matching against protocol logic before production commit.
+  - [x] **System Pulse Telemetry** — Persistent navigation heartbeat showing system vitality and active AI model architecture (DeepSeek/Gemini/Llama).
+  - [x] **Intelligence Tuning Hub** — Centralized settings manager for dynamic control of engine thresholds, intervals, and AI models.
+  - [x] **Advanced Simulator 2.0** — Immersive "Forensic Terminal" for packet injection with deep decision-vector visualization (Source, Reason, Rule ID, AI Confidence).
+  - [x] **Auth Gateway Hardening** — Removal of development credentials and implementation of "Clean Slate" form resets for secure access.
 
-2. **Proper Job Queue**: The 1-minute polling scheduler works but introduces up to 60s latency for deferred items. In production, BullMQ/Redis with precise delay scheduling would be strictly better.
+---
 
-3. **Stack 2 (Spring Boot)**: Time constraints prevented building the second stack. The architecture is deliberately decoupled — the frontend talks to a JSON API — so a Spring Boot backend with the same endpoints and schema would slot in without frontend changes.
+## Future Roadmap & Lessons Learned
 
-4. **End-to-End Tests**: While the system was manually tested through the simulator, automated integration tests (Supertest for API, Playwright for the frontend) would catch regressions.
-
-5. **Observability**: Structured logging with correlation IDs per event and OpenTelemetry traces through the decision pipeline would make debugging production issues far easier than relying on console output.
+1. **Edge Intelligence (Planned)**: Moving deterministic rule evaluation to the network edge (Vercel Edge / Cloudflare Workers) to bypass the main engine for high-volume, low-complexity packets.
+2. **LLM-Logic Co-evolution**: Using processed event history to suggest *new* deterministic rules, closing the loop between AI observation and deterministic automation.
+3. **Observability**: While basic audit traces exist, full OpenTelemetry integration would provide industry-standard tracing for complex decision trees.
+4. **WebSocket Real-time**: The transition from polling to WebSockets for the Simulator and Dashboard would further enhance the "Live Engine" feel.
+5. **Multi-Backend Interop**: The architecture is ready for a Spring Boot (Stack 2) migration, as all contracts represent a standard JSON REST API.

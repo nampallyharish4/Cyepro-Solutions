@@ -16,7 +16,9 @@ import {
   ChevronDown,
   ChevronRight,
   Trash2,
-  Copy,
+  Terminal,
+  Layers,
+  Fingerprint
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/api';
@@ -47,7 +49,6 @@ export default function Simulator() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SubmissionResult | null>(null);
   const [history, setHistory] = useState<SubmissionResult[]>([]);
-  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'ok' | 'err' } | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -69,7 +70,7 @@ export default function Simulator() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  const generateDedupeKey = () => `dedupe_${Math.random().toString(36).substr(2, 9)}`;
+  const generateDedupeKey = () => `pkt_${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
   useEffect(() => {
     setForm((prev) => ({ ...prev, dedupe_key: generateDedupeKey() }));
@@ -78,9 +79,9 @@ export default function Simulator() {
 
   const validate = () => {
     if (!form.user_id.trim()) { showToast('User ID is required', 'err'); return false; }
-    if (!form.event_type.trim()) { showToast('Event Type is required', 'err'); return false; }
-    if (!form.title.trim()) { showToast('Title is required', 'err'); return false; }
-    if (!form.source.trim()) { showToast('Source is required', 'err'); return false; }
+    if (!form.event_type.trim()) { showToast('Packet Type is required', 'err'); return false; }
+    if (!form.title.trim()) { showToast('Context Title is required', 'err'); return false; }
+    if (!form.source.trim()) { showToast('Service Source is required', 'err'); return false; }
     if (form.metadata.trim()) {
       try { JSON.parse(form.metadata); } catch {
         showToast('Metadata must be valid JSON', 'err'); return false;
@@ -124,7 +125,6 @@ export default function Simulator() {
       };
       setResult(pending);
 
-      // Poll for audit log result
       let attempts = 0;
       pollRef.current = setInterval(async () => {
         attempts++;
@@ -139,21 +139,20 @@ export default function Simulator() {
               _form: pending._form,
             };
             setResult(final);
-            setHistory((prev) => [final, ...prev].slice(0, 20));
+            setHistory((prev: any) => [final, ...prev].slice(0, 10));
             if (pollRef.current) clearInterval(pollRef.current);
-            showToast(`Classified as ${match.decision}`, 'ok');
+            showToast(`Packet Prioritized: ${match.decision}`, 'ok');
           }
         } catch (err) {
           console.error(err);
         }
-        if (attempts > 25 && pollRef.current) {
+        if (attempts > 30 && pollRef.current) {
           clearInterval(pollRef.current);
-          showToast('Classification timed out — check Audit Log', 'err');
+          showToast('Analysis delayed — check Archive', 'err');
         }
-      }, 800);
+      }, 1000);
 
-      // Reset form for next submission
-      setForm((prev) => ({
+      setForm((prev: any) => ({
         ...prev,
         title: '',
         message: '',
@@ -166,7 +165,7 @@ export default function Simulator() {
       const errResult: SubmissionResult = {
         id: 'error',
         event_id: 'error',
-        error: err.response?.data?.error || 'Failed to submit event',
+        error: err.response?.data?.error || 'System Overload: Launch Failed',
         _submitted_at: Date.now(),
         _form: { ...form },
       };
@@ -178,265 +177,160 @@ export default function Simulator() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-sm font-medium border backdrop-blur-lg shadow-2xl transition-all ${toast.type === 'ok' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border-rose-500/30 text-rose-300'}`}>
-          {toast.msg}
-        </div>
-      )}
+    <div className="space-y-12 pb-20">
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+            className={`fixed top-8 right-8 z-[1000] px-6 py-4 rounded-2xl border backdrop-blur-3xl shadow-2xl flex items-center gap-3 ${toast.type === 'ok' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}
+          >
+            {toast.type === 'ok' ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
+            <span className="text-sm font-black uppercase tracking-widest">{toast.msg}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-2"
-      >
-        <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-          System Simulator
-        </h1>
-        <p className="text-base text-zinc-400">
-          Trigger notification events to test prioritization logic & AI classification.
+      <motion.div initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+           <div className="h-12 w-12 rounded-2xl bg-purple-600/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-[0_0_20px_rgba(147,51,234,0.1)]">
+              <Rocket className="h-6 w-6" />
+           </div>
+           <h1 className="text-4xl sm:text-5xl font-black text-white italic tracking-tighter uppercase underline decoration-purple-600/30 underline-offset-8">
+              System Simulator
+           </h1>
+        </div>
+        <p className="text-lg text-zinc-500 font-medium max-w-2xl leading-relaxed">
+           Cognitive Stress Tester: Inject notification packets to analyze propagation, deterministic overrides, and AI-driven classification flows.
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Form Section */}
-        <motion.section
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="glass-card p-5 sm:p-8"
-        >
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Row: User ID + Event Type */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <InputGroup label="User ID *" placeholder="e.g. user_123" value={form.user_id} onChange={(v: string) => setForm({ ...form, user_id: v })} />
-              <InputGroup label="Event Type *" placeholder="e.g. payment_failed" value={form.event_type} onChange={(v: string) => setForm({ ...form, event_type: v })} />
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+        <motion.section initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-6 sm:p-10 border-t-2 border-t-purple-600">
+          <div className="flex items-center gap-3 mb-10">
+             <Terminal className="h-5 w-5 text-purple-400" />
+             <h3 className="text-sm font-black text-white uppercase tracking-[0.3em] italic">Packet Configuration</h3>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <InputGroup label="Target User" placeholder="e.g. system_admin" value={form.user_id} onChange={(v: string) => setForm({ ...form, user_id: v })} />
+              <InputGroup label="Cognitive Type" placeholder="e.g. CORE_LOGISTICS" value={form.event_type} onChange={(v: string) => setForm({ ...form, event_type: v })} />
             </div>
 
-            <InputGroup label="Title *" placeholder="e.g. Payment Failed for Order #456" value={form.title} onChange={(v: string) => setForm({ ...form, title: v })} />
+            <InputGroup label="Context Title" placeholder="e.g. Server Temperature Warning" value={form.title} onChange={(v: string) => setForm({ ...form, title: v })} />
 
-            {/* Row: Source + Channel */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <InputGroup label="Source *" placeholder="e.g. payment-service" value={form.source} onChange={(v: string) => setForm({ ...form, source: v })} />
-              <div className="space-y-1.5">
-                <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-500">Channel</label>
-                <select
-                  value={form.channel}
-                  onChange={(e) => setForm({ ...form, channel: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 sm:py-3 text-sm text-white focus:outline-none focus:border-purple-500/50 appearance-none"
-                >
-                  {CHANNELS.map((ch) => <option key={ch} value={ch} className="bg-zinc-900">{ch}</option>)}
-                </select>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <InputGroup label="Service Origin" placeholder="e.g. monitor-service" value={form.source} onChange={(v: string) => setForm({ ...form, source: v })} />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 block">Propagation Channel</label>
+                <div className="relative">
+                  <select
+                    value={form.channel}
+                    onChange={(e) => setForm({ ...form, channel: e.target.value })}
+                    className="w-full bg-white/[0.02] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-purple-500/50 appearance-none font-bold italic"
+                  >
+                    {CHANNELS.map((ch) => <option key={ch} value={ch} className="bg-zinc-950">{ch}</option>)}
+                  </select>
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-700 pointer-events-none" />
+                </div>
               </div>
             </div>
 
-            {/* Row: Priority Hint + Dedupe Key */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <InputGroup label="Priority Hint" placeholder="e.g. high, low, medium" value={form.priority_hint} onChange={(v: string) => setForm({ ...form, priority_hint: v })} />
-              <InputGroup label="Dedupe Key" placeholder="Auto-generated" value={form.dedupe_key} onChange={(v: string) => setForm({ ...form, dedupe_key: v })} />
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <InputGroup label="Priority Scalar" placeholder="low | high | urgent" value={form.priority_hint} onChange={(v: string) => setForm({ ...form, priority_hint: v })} />
+              <InputGroup label="Entropy Key" placeholder="Auto-gen UUID" value={form.dedupe_key} onChange={(v: string) => setForm({ ...form, dedupe_key: v })} />
             </div>
 
-            {/* Expires At */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-500">Expires At (optional)</label>
-              <input
-                type="datetime-local"
-                value={form.expires_at}
-                onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 sm:py-3 text-sm text-white focus:outline-none focus:border-purple-500/50 [color-scheme:dark]"
-              />
+            <div className="space-y-2">
+               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 block">Expiration Lifecycle</label>
+               <input
+                 type="datetime-local"
+                 value={form.expires_at}
+                 onChange={(e) => setForm({ ...form, expires_at: e.target.value })}
+                 className="w-full bg-white/[0.02] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-purple-500/50 [color-scheme:dark] font-bold"
+               />
             </div>
 
-            {/* Message */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-500">Message</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 block">Message Payload</label>
               <textarea
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 sm:py-3 text-sm text-white focus:outline-none focus:border-purple-500/50 min-h-[80px] resize-y"
-                placeholder="Optional message body..."
+                className="w-full bg-white/[0.02] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-purple-500/50 min-h-[100px] resize-y"
+                placeholder="Optional message..."
                 value={form.message}
                 onChange={(e) => setForm({ ...form, message: e.target.value })}
               />
             </div>
 
-            {/* Metadata JSON */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-500">Metadata (JSON)</label>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 block">Forensic Metadata (JSON)</label>
               <textarea
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 sm:py-3 text-sm text-white font-mono focus:outline-none focus:border-purple-500/50 min-h-[60px] resize-y"
-                placeholder='{"severity": "critical", "region": "us-east-1"}'
+                className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-[11px] text-emerald-400 font-mono focus:outline-none focus:border-purple-500/50 min-h-[100px] resize-y"
+                placeholder='{}'
                 value={form.metadata}
                 onChange={(e) => setForm({ ...form, metadata: e.target.value })}
               />
             </div>
 
-            <button
-              disabled={loading}
-              className="glass-button w-full bg-purple-600 hover:bg-purple-500 text-white font-bold flex items-center justify-center gap-2 group py-3"
-            >
-              {loading ? (
-                <RefreshCcw className="h-5 w-5 animate-spin" />
-              ) : (
-                <>
-                  <Rocket className="h-5 w-5 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
-                  Launch Event
-                </>
-              )}
+            <button disabled={loading} className="relative w-full overflow-hidden rounded-[24px] bg-purple-600 py-4 font-black uppercase italic tracking-[0.4em] text-white shadow-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 group">
+              {loading ? 'Orchestrating...' : 'Launch Packet'}
             </button>
           </form>
         </motion.section>
 
-        {/* Results Section */}
-        <section className="flex flex-col gap-6">
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="glass-card p-5 sm:p-8 min-h-[400px] flex flex-col"
-          >
-            <h3 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2 text-white">
-              <ActivityIcon className="h-5 w-5 text-purple-400" />
-              Classification Result
-            </h3>
+        <section className="flex flex-col gap-8">
+          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-6 sm:p-10 min-h-[500px] flex flex-col relative overflow-hidden">
+            <div className="flex items-center justify-between mb-10">
+               <div className="flex items-center gap-3">
+                  <Fingerprint className="h-5 w-5 text-purple-400" />
+                  <h3 className="text-sm font-black text-white uppercase tracking-[0.3em] italic">Forensic Analysis</h3>
+               </div>
+            </div>
 
-            <AnimatePresence mode="wait">
-              {result ? (
-                <motion.div
-                  key={result.id || 'pending'}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex-1"
-                >
-                  {result.error ? (
-                    <div className="flex flex-col items-center justify-center h-full text-rose-400 gap-3">
-                      <AlertCircle className="h-12 w-12" />
-                      <p className="text-sm text-center">{result.error}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-5">
-                      {/* Decision Badge */}
-                      <div className="flex items-center gap-4">
-                        <div className={`h-14 w-14 sm:h-16 sm:w-16 rounded-2xl flex items-center justify-center text-white shadow-lg shrink-0 ${getDecisionColor(result.decision || result.status)}`}>
+            <div className="flex-1">
+              <AnimatePresence mode="wait">
+                {!result ? (
+                  <div className="h-full flex flex-col items-center justify-center text-zinc-700 gap-6 opacity-20">
+                    <Send className="h-20 w-20" />
+                    <p className="font-black uppercase tracking-widest text-xs">Waiting for injection...</p>
+                  </div>
+                ) : result.error ? (
+                  <div className="flex flex-col items-center justify-center h-full text-rose-500 gap-4">
+                    <Ban className="h-8 w-8" />
+                    <p className="font-black uppercase tracking-widest italic text-sm">System Conflict</p>
+                  </div>
+                ) : (
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-6 p-6 rounded-[32px] bg-white/[0.02] border border-white/5">
+                        <div className={`h-20 w-20 rounded-[24px] flex items-center justify-center text-white ${getDecisionColor(result.decision || result.status)}`}>
                           {getDecisionIcon(result.decision || result.status)}
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                            {result.decision ? 'Final Decision' : 'Processing'}
-                          </span>
-                          <h4 className="text-xl sm:text-2xl font-bold text-white">
-                            {result.decision || result.status}
-                          </h4>
+                          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-1">Pipeline Consensus</p>
+                          <h4 className="text-4xl font-black text-white italic uppercase">{result.decision || result.status}</h4>
                         </div>
-                      </div>
-
-                      {/* Detail Rows */}
-                      <div className="space-y-3">
-                        <DetailRow label="Event ID" value={result.event_id} mono />
-                        <DetailRow
-                          label="Reason"
-                          value={result.reason || 'Analysis in progress...'}
-                          isReason
-                        />
-
-                        {/* Rule Info */}
-                        {result.rule_id && (
-                          <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-3 sm:p-4">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Shield className="h-4 w-4 text-cyan-400" />
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-300">Matched Rule</span>
-                            </div>
-                            {result.rules ? (
-                              <p className="text-sm text-cyan-200">
-                                {result.rules.name} — {result.rules.condition_type}: {result.rules.condition_value}
-                              </p>
-                            ) : (
-                              <p className="text-xs text-cyan-400/60 font-mono">{result.rule_id}</p>
-                            )}
-                          </div>
-                        )}
-
-                        {/* AI Info */}
-                        {result.ai_used && (
-                          <div className={`rounded-xl border p-3 sm:p-4 ${result.is_fallback ? 'border-amber-500/30 bg-amber-500/5' : 'border-purple-500/30 bg-purple-500/5'}`}>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Brain className="h-4 w-4" style={{ color: result.is_fallback ? '#f59e0b' : '#a78bfa' }} />
-                              <span className={`text-[10px] font-bold uppercase tracking-widest ${result.is_fallback ? 'text-amber-300' : 'text-purple-300'}`}>
-                                {result.is_fallback ? 'AI Fallback' : 'AI Classification'}
-                              </span>
-                            </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                              <span className={result.is_fallback ? 'text-amber-200' : 'text-purple-200'}>
-                                Model: {result.ai_model || '—'}
-                              </span>
-                              <span className={result.is_fallback ? 'text-amber-200' : 'text-purple-200'}>
-                                Confidence: {result.ai_confidence != null ? `${(result.ai_confidence * 100).toFixed(1)}%` : '—'}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Timestamp */}
-                        {result.processed_at && (
-                          <DetailRow
-                            label="Processed"
-                            value={formatDistanceToNow(new Date(result.processed_at), { addSuffix: true })}
-                          />
-                        )}
-                      </div>
                     </div>
-                  )}
-                </motion.div>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-zinc-600 gap-4 opacity-30">
-                  <Send className="h-16 w-16 sm:h-20 sm:w-20" />
-                  <p className="font-medium text-center text-sm sm:text-base">
-                    Submit an event to see classification results.
-                  </p>
-                </div>
-              )}
-            </AnimatePresence>
+                    <ForensicRow label="Global Event ID" value={result.event_id} />
+                    <ForensicRow label="Reasoning" value={result.reason || '...'} highlight />
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
 
-          {/* Submission History */}
           {history.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-card p-5 sm:p-6"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-zinc-500" />
-                  Session History ({history.length})
-                </h4>
-                <button
-                  onClick={() => setHistory([])}
-                  className="text-[10px] font-bold uppercase tracking-widest text-zinc-600 hover:text-rose-400 transition-colors flex items-center gap-1"
-                >
-                  <Trash2 className="h-3 w-3" /> Clear
-                </button>
-              </div>
-              <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
-                {history.map((h) => (
-                  <button
-                    key={h.id}
-                    onClick={() => {
-                      setResult(h);
-                      setExpandedHistoryId(expandedHistoryId === h.id ? null : h.id);
-                    }}
-                    className="w-full flex items-center gap-3 p-2.5 rounded-lg bg-white/[0.02] hover:bg-white/5 transition-colors text-left"
-                  >
-                    <DecisionDot decision={h.decision || '?'} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{h._form?.title || 'Untitled'}</p>
-                      <p className="text-[10px] text-zinc-600 truncate">{h.reason}</p>
-                    </div>
-                    <span className={`text-[10px] font-bold uppercase tracking-widest shrink-0 ${decisionColor(h.decision)}`}>
-                      {h.decision || '...'}
-                    </span>
-                  </button>
-                ))}
-              </div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 sm:p-8">
+               <h4 className="text-[11px] font-black text-white uppercase italic tracking-widest mb-8">Decision Stream</h4>
+               <div className="space-y-3">
+                  {history.map((h, i) => (
+                    <button key={h.id} onClick={() => setResult(h)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-transparent hover:border-white/5 transition-all text-left">
+                      <div className={`h-3 w-3 rounded-full ${DecisionDotColor(h.decision)}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white font-black italic uppercase truncate">{h._form?.title || 'Packet Burst'}</p>
+                      </div>
+                      <span className={`text-[10px] font-black uppercase italic ${decisionColor(h.decision)}`}>{h.decision}</span>
+                    </button>
+                  ))}
+               </div>
             </motion.div>
           )}
         </section>
@@ -447,61 +341,40 @@ export default function Simulator() {
 
 function InputGroup({ label, placeholder, value, onChange }: any) {
   return (
-    <div className="space-y-1.5">
-      <label className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-zinc-500">{label}</label>
-      <input
-        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 sm:py-3 text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:border-purple-500/50"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      />
+    <div className="space-y-2">
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 block">{label}</label>
+      <input className="w-full bg-white/[0.02] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder:text-zinc-800 focus:outline-none focus:border-purple-500/50 font-bold" placeholder={placeholder} value={value} onChange={(e) => onChange(e.target.value)} />
     </div>
   );
 }
 
-function DetailRow({ label, value, mono, isReason }: { label: string; value: string; mono?: boolean; isReason?: boolean }) {
+function ForensicRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="border-b border-white/5 pb-2.5">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block mb-0.5">{label}</span>
-      <p className={`text-sm break-all ${mono ? 'font-mono text-zinc-500 text-xs' : isReason ? 'text-zinc-300 italic' : 'text-zinc-300'}`}>
-        {value}
-      </p>
+    <div className="space-y-1.5 border-b border-white/5 pb-4">
+      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-700 block">{label}</span>
+      <p className={`text-sm break-all font-bold ${highlight ? 'text-zinc-200 italic' : 'text-zinc-500 font-mono text-[11px]'}`}>{value}</p>
     </div>
   );
 }
 
-function DecisionDot({ decision }: { decision: string }) {
-  const bg: Record<string, string> = {
-    NOW: 'bg-emerald-500', LATER: 'bg-amber-500', NEVER: 'bg-rose-500', SENT: 'bg-purple-500',
-  };
-  return <span className={`block h-2.5 w-2.5 rounded-full shrink-0 ${bg[decision] || 'bg-zinc-600'}`} />;
+function DecisionDotColor(d?: string) {
+  return d === 'NOW' ? 'bg-emerald-500' : d === 'LATER' ? 'bg-amber-500' : 'bg-rose-500';
 }
 
 function decisionColor(d?: string) {
-  switch (d) {
-    case 'NOW': return 'text-emerald-400';
-    case 'LATER': return 'text-amber-400';
-    case 'NEVER': return 'text-rose-400';
-    default: return 'text-zinc-500';
-  }
+  return d === 'NOW' ? 'text-emerald-400' : d === 'LATER' ? 'text-amber-400' : 'text-rose-400';
 }
 
-const getDecisionColor = (d?: string) => {
-  switch (d) {
-    case 'NOW': return 'bg-emerald-500 shadow-emerald-500/20';
-    case 'LATER': return 'bg-amber-500 shadow-amber-500/20';
-    case 'NEVER': return 'bg-rose-500 shadow-rose-500/20';
-    case 'PROCESSING': return 'bg-indigo-500 animate-pulse';
-    default: return 'bg-zinc-700';
-  }
-};
+function getDecisionColor(d?: string) {
+  return d === 'NOW' ? 'bg-emerald-500' : d === 'LATER' ? 'bg-amber-500' : d === 'NEVER' ? 'bg-rose-500' : 'bg-indigo-600';
+}
 
-const getDecisionIcon = (d?: string) => {
+function getDecisionIcon(d?: string) {
   switch (d) {
-    case 'NOW': return <CheckCircle2 className="h-7 w-7 sm:h-8 sm:w-8" />;
-    case 'LATER': return <Clock className="h-7 w-7 sm:h-8 sm:w-8" />;
-    case 'NEVER': return <Ban className="h-7 w-7 sm:h-8 sm:w-8" />;
-    case 'PROCESSING': return <RefreshCcw className="h-7 w-7 sm:h-8 sm:w-8 animate-spin" />;
+    case 'NOW': return <CheckCircle2 className="h-10 w-10" />;
+    case 'LATER': return <Clock className="h-10 w-10" />;
+    case 'NEVER': return <Ban className="h-10 w-10" />;
+    case 'PROCESSING': return <RefreshCcw className="h-10 w-10 animate-spin" />;
     default: return null;
   }
-};
+}

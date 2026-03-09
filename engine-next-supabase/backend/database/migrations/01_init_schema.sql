@@ -40,6 +40,15 @@ CREATE TABLE IF NOT EXISTS rules (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Global System Settings
+CREATE TABLE IF NOT EXISTS system_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE NOT NULL, -- 'AI_MODEL', 'DEDUPE_THRESHOLD', 'LATER_DELAY_MIN', etc.
+  value TEXT NOT NULL,
+  description TEXT,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- Audit Logs (Decision audit)
 CREATE TABLE IF NOT EXISTS audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -51,6 +60,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   ai_model TEXT,
   ai_confidence FLOAT,
   is_fallback BOOLEAN DEFAULT false,
+  trace JSONB DEFAULT '[]', -- Execution path [ { stage, status, details }, ... ]
   processed_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -96,3 +106,46 @@ $$;
 
 CREATE INDEX idx_audit_logs_event_id ON audit_logs(event_id);
 CREATE INDEX idx_deferred_queue_status ON deferred_queue(status);
+
+-- Analytics Function: Get Rule Efficiency (Hit count per rule)
+CREATE OR REPLACE FUNCTION get_rule_efficiency()
+RETURNS TABLE (
+  rule_id UUID,
+  rule_name TEXT,
+  hits BIGINT
+) LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    r.id,
+    r.name,
+    COUNT(al.id)::BIGINT
+  FROM rules r
+  JOIN audit_logs al ON al.rule_id = r.id
+  WHERE r.is_active = true
+  GROUP BY r.id, r.name
+  ORDER BY hits DESC;
+END;
+$$;
+
+-- Analytics Function: Get Top Noise Sources (Source/Type vs NEVER/LATER)
+CREATE OR REPLACE FUNCTION get_noise_sources()
+RETURNS TABLE (
+  source TEXT,
+  decision TEXT,
+  count BIGINT
+) LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    ne.source,
+    al.decision,
+    COUNT(al.id)::BIGINT
+  FROM notification_events ne
+  JOIN audit_logs al ON al.event_id = ne.id
+  WHERE al.decision IN ('NEVER', 'LATER')
+  GROUP BY ne.source, al.decision
+  ORDER BY count DESC
+  LIMIT 10;
+END;
+$$;

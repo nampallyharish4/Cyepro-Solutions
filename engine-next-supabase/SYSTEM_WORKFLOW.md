@@ -79,3 +79,27 @@ This document describes the runtime execution flows for the Next.js + Supabase i
 5. All API requests attach `Authorization: Bearer <token>` via axios interceptor.
 6. `401` responses auto-redirect to `/login` and clear `localStorage`.
 7. On logout, a confirmation modal appears — only confirmed logout clears the session.
+
+---
+
+## 7. Rule Protocol Sandbox (Validation)
+
+1. **Simulator Stage**: Admin defines a new classification rule (e.g., `TITLE_CONTAINS = 'Urgent'`).
+2. **Pre-flight Check**: Before saving, the admin uses the **Validation Sandbox** within the Rules Manager.
+3. **Mock Payload**: Admin enters test values for `Source`, `Type`, and `Title`.
+4. **Dry Run**: Frontend calls `POST /api/rules/dry-run`.
+5. **Validation Logic**: Backend executes a simulation of the `DecisionEngine`'s rule-matching logic *without* writing to the database or affecting production logs.
+6. **Instant Feedback**: Frontend displays a "MATCHED" or "SKIPPED" status with the simulated outcome (`NOW`/`LATER`/`NEVER`) and the rule match reason.
+7. **Production Commit**: Admin saves the rule only after confirming it behaves as expected.
+
+---
+
+## 8. Intelligence Settings & Telemetry
+
+1. **Dynamic Configuration**: System parameters (Dedupe Threshold, Fatigue Limit, AI Models) are managed via `system_settings` table.
+2. **Zero-Restart Updates**: Updating a setting (e.g., changing AI model to `DeepSeek-V3`) is instantly reflected in the next `DecisionEngine` processing cycle.
+3. **Sidebar Pulse**: A global "Pulse" widget monitors system vitality, fetching the active AI model architecture and displaying a heartbeat animation.
+4. **Cognitive Analytics**: The dashboard provides real-time telemetry:
+   - **Rule Efficiency**: Hit-rates for deterministic vs. AI classification.
+   - **Noise Attribution**: automated identification of high-volume sources causing `NEVER` outcomes.
+   - **AI Confidence**: Continuous monitoring of LLM certainty scores to detect classification drift.

@@ -14,6 +14,10 @@ import {
   Skull,
   Brain,
   ChevronRight,
+  Target,
+  BarChart3,
+  TrendingDown,
+  Microscope
 } from 'lucide-react';
 import api, { API_URL } from '@/lib/api';
 import axios from 'axios';
@@ -31,7 +35,10 @@ import {
   YAxis,
   CartesianGrid,
   Legend,
+  BarChart,
+  Bar
 } from 'recharts';
+import { PageLoader } from '@/components/PageLoader';
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<any>({
@@ -39,32 +46,41 @@ export default function Dashboard() {
     queue: { waiting: 0, failed: 0, dead_letter: 0 },
     recent: [],
   });
-  const [health, setHealth] = useState<any>({
+  const [analytics, setAnalytics] = useState<any>({
+    ruleEfficiency: [],
+    noiseSources: [],
+    aiMetrics: { avgConfidence: 0, fallbackRate: 0, totalAnalyses: 0 }
+  });
+   const [health, setHealth] = useState<any>({
     status: 'LOADING', engine: 'UNKNOWN', database: 'UNKNOWN',
     ai_service: { status: 'UNKNOWN', circuitBreaker: 'UNKNOWN', failureCount: 0 },
   });
   const [timeline, setTimeline] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     const fetchData = async () => {
       try {
-        const [mRes, hRes, tRes] = await Promise.all([
-          api.get('/metrics'),
-          axios.get(`${API_URL.replace('/api', '/health')}`),
-          api.get('/metrics/timeline'),
+        const [mRes, hRes, tRes, aRes] = await Promise.all([
+          api.get('/metrics').catch(() => ({ data: null })),
+          axios.get(`${API_URL.replace('/api', '/health')}`).catch(() => ({ data: null })),
+          api.get('/metrics/timeline').catch(() => ({ data: null })),
+          api.get('/analytics').catch(() => ({ data: null })),
         ]);
-        setMetrics(mRes.data);
-        setHealth(hRes.data);
-        setTimeline(tRes.data);
+        if (mRes.data) setMetrics(mRes.data);
+        if (hRes.data) setHealth(hRes.data);
+        if (tRes.data) setTimeline(tRes.data);
+        if (aRes.data) setAnalytics(aRes.data);
       } catch (err) {
-        console.error('Fetch failed', err);
-        setHealth((prev: any) => ({ ...prev, status: 'ERROR', engine: 'DISCONNECTED' }));
+        // Silent catch for unexpected global failures
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
-    const interval = setInterval(fetchData, 5000);
+    const interval = setInterval(fetchData, 8000);
     return () => clearInterval(interval);
   }, []);
 
@@ -78,6 +94,14 @@ export default function Dashboard() {
   const aiHealthy = aiStatus.status === 'HEALTHY' || aiStatus.circuitBreaker === 'CLOSED';
   const dbHealthy = health.database === 'CONNECTED';
 
+   if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <PageLoader />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -86,268 +110,269 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col gap-2"
       >
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white uppercase italic underline decoration-purple-600/30 underline-offset-8">
           Engine Command
         </h1>
-        <p className="text-base sm:text-lg text-zinc-400">
-          Real-time prioritization & system intelligence overview.
+        <p className="text-base sm:text-lg text-zinc-500 font-medium">
+          Strategic overview of system intelligence & cognitive performance.
         </p>
       </motion.div>
 
       {/* Health Status Bar */}
-      {!mounted || health.status !== 'OK' || !dbHealthy || !aiHealthy ? (
-        <motion.div
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           className="flex justify-start py-4"
-        >
-          <Loader />
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.15 }}
-          className="flex flex-wrap items-center gap-3"
-        >
-          <StatusBadge
-            label="System"
-            value={health.status === 'OK' ? 'Healthy' : health.status === 'DEGRADED' ? 'Degraded' : health.status}
-            icon={ActivityIcon}
-            color={health.status === 'OK' ? 'emerald' : 'amber'}
-          />
-          <StatusBadge
-            label="Database"
-            value={dbHealthy ? 'Connected' : health.database || 'Unknown'}
-            icon={Database}
-            color={dbHealthy ? 'emerald' : 'amber'}
-          />
-          <StatusBadge
-            label="AI Service"
-            value={aiHealthy ? 'Operational' : aiStatus.circuitBreaker === 'OPEN' ? 'Circuit Open' : 'Degraded'}
-            icon={Brain}
-            color={aiHealthy ? 'purple' : 'amber'}
-          />
-          {aiStatus.failureCount > 0 && (
-            <StatusBadge
-              label="AI Failures"
-              value={`${aiStatus.failureCount} / ${aiStatus.failureThreshold || 5}`}
-              icon={AlertTriangle}
-              color="amber"
-            />
-          )}
-        </motion.div>
-      )}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.15 }}
+        className="flex flex-wrap items-center gap-3"
+      >
+        <StatusBadge
+          label="System"
+          value={health.status === 'OK' ? 'Healthy' : health.status === 'DEGRADED' ? 'Degraded' : health.status}
+          icon={ActivityIcon}
+          color={health.status === 'OK' ? 'emerald' : 'amber'}
+        />
+        <StatusBadge
+          label="Database"
+          value={dbHealthy ? 'Connected' : health.database || 'Unknown'}
+          icon={Database}
+          color={dbHealthy ? 'emerald' : 'amber'}
+        />
+        <StatusBadge
+          label="AI Engine"
+          value={aiHealthy ? 'Operational' : 'Paused'}
+          icon={Brain}
+          color={aiHealthy ? 'purple' : 'amber'}
+        />
+      </motion.div>
 
       {/* Metric Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <MetricCard label="Total Events" value={metrics.total} icon={ActivityIcon} color="zinc" delay={0} />
-        <MetricCard label="Deliver (NOW)" value={metrics.now} icon={ArrowUpRight} color="emerald" delay={0.05} />
-        <MetricCard label="Defer (LATER)" value={metrics.later} icon={Clock} color="amber" delay={0.1} />
-        <MetricCard label="Drop (NEVER)" value={metrics.never} icon={Ban} color="rose" delay={0.15} />
-        <MetricCard label="Sent" value={metrics.sent} icon={Send} color="purple" delay={0.2} />
+        <MetricCard label="Total Packets" value={metrics.total} icon={ActivityIcon} color="zinc" delay={0} />
+        <MetricCard label="Immediate (NOW)" value={metrics.now} icon={ArrowUpRight} color="emerald" delay={0.05} />
+        <MetricCard label="Deferred (LATER)" value={metrics.later} icon={Clock} color="amber" delay={0.1} />
+        <MetricCard label="Dropped (NEVER)" value={metrics.never} icon={Ban} color="rose" delay={0.15} />
+        <MetricCard label="Final Dispatch" value={metrics.sent} icon={Send} color="purple" delay={0.2} />
       </div>
 
-      {/* Queue Stats */}
-      {(metrics.queue?.waiting > 0 || metrics.queue?.failed > 0 || metrics.queue?.dead_letter > 0) && (
+      {/* Main Intelligence Grid */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        
+        {/* Trend Analysis */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.25 }}
-          className="flex flex-wrap gap-3"
-        >
-          {metrics.queue.waiting > 0 && (
-            <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-2 text-sm">
-              <Clock className="h-4 w-4 text-amber-400" />
-              <span className="text-amber-300 font-semibold">{metrics.queue.waiting}</span>
-              <span className="text-zinc-400">in queue</span>
-            </div>
-          )}
-          {metrics.queue.failed > 0 && (
-            <div className="flex items-center gap-2 rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-2 text-sm">
-              <AlertTriangle className="h-4 w-4 text-rose-400" />
-              <span className="text-rose-300 font-semibold">{metrics.queue.failed}</span>
-              <span className="text-zinc-400">failed (retrying)</span>
-            </div>
-          )}
-          {metrics.queue.dead_letter > 0 && (
-            <div className="flex items-center gap-2 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm">
-              <Skull className="h-4 w-4 text-red-400" />
-              <span className="text-red-300 font-semibold">{metrics.queue.dead_letter}</span>
-              <span className="text-zinc-400">dead letter</span>
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Pie Chart */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ y: -4, scale: 1.01 }}
           transition={{ delay: 0.3 }}
-          className="glass-card p-6 sm:p-8"
+          className="lg:col-span-2 glass-card p-6 sm:p-8 hover:border-purple-500/30 hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.2)] transition-all duration-500"
         >
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg sm:text-xl font-semibold text-white">Priority Distribution</h3>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Live</span>
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="text-lg font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-purple-400" />
+              Cognitive Trends (24h)
+            </h3>
+            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Real-time Timeline</span>
           </div>
-          <div className="h-60 sm:h-72 w-full">
-            {mounted && chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    innerRadius={70}
-                    outerRadius={95}
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} stroke="none" />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px' }}
-                    itemStyle={{ color: '#fff' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-full items-center justify-center text-zinc-600 italic">
-                {mounted ? 'Waiting for incoming data...' : 'Loading...'}
-              </div>
-            )}
-          </div>
-          {/* Legend under pie */}
-          {mounted && chartData.length > 0 && (
-            <div className="flex justify-center gap-6 mt-2">
-              {chartData.map((d) => (
-                <div key={d.name} className="flex items-center gap-2 text-xs text-zinc-400">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.fill }} />
-                  {d.name}: {d.value}
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Area Chart */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.35 }}
-          className="glass-card p-6 sm:p-8"
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg sm:text-xl font-semibold text-white">Hourly Trend (24h)</h3>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">Time Series</span>
-          </div>
-          <div className="h-60 sm:h-72 w-full">
+          <div className="h-64 w-full">
             {mounted && timeline.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={timeline}>
                   <defs>
                     <linearGradient id="colorNow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
                       <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
-                    <linearGradient id="colorLater" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorNever" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-                    </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                   <XAxis
                     dataKey="hour"
-                    stroke="#52525b"
-                    tick={{ fill: '#71717a', fontSize: 10 }}
-                    tickFormatter={(v: string) => v.split('T')[1] || v}
+                    stroke="#3f3f46"
+                    tick={{ fill: '#71717a', fontSize: 10, fontWeight: 'bold' }}
+                    tickFormatter={(v: string) => v.split('T')[1]?.slice(0, 5) || v}
                   />
-                  <YAxis stroke="#52525b" tick={{ fill: '#71717a', fontSize: 10 }} allowDecimals={false} />
+                  <YAxis stroke="#3f3f46" tick={{ fill: '#71717a', fontSize: 10, fontWeight: 'bold' }} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '12px' }}
-                    itemStyle={{ color: '#fff' }}
-                    labelFormatter={(v) => String(v).replace('T', ' ')}
+                    contentStyle={{ backgroundColor: '#09090b', border: '1px solid #27272a', borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}
+                    itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
                   />
-                  <Legend wrapperStyle={{ fontSize: '11px', color: '#a1a1aa' }} />
-                  <Area type="monotone" dataKey="now" name="NOW" stroke="#10b981" fillOpacity={1} fill="url(#colorNow)" />
-                  <Area type="monotone" dataKey="later" name="LATER" stroke="#f59e0b" fillOpacity={1} fill="url(#colorLater)" />
-                  <Area type="monotone" dataKey="never" name="NEVER" stroke="#f43f5e" fillOpacity={1} fill="url(#colorNever)" />
+                  <Area type="monotone" dataKey="now" name="NOW" stroke="#10b981" strokeWidth={3} fill="url(#colorNow)" />
+                  <Area type="monotone" dataKey="later" name="LATER" stroke="#f59e0b" strokeWidth={2} fill="transparent" />
+                  <Area type="monotone" dataKey="never" name="NEVER" stroke="#f43f5e" strokeWidth={2} fill="transparent" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-zinc-600 italic">
-                {mounted ? 'No timeline data yet — events will appear here.' : 'Loading...'}
-              </div>
+              <div className="flex h-full items-center justify-center text-zinc-700 italic font-medium">Synthesizing timeline data...</div>
             )}
           </div>
         </motion.div>
+
+        {/* Priority Distribution */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ y: -4, scale: 1.01 }}
+          transition={{ delay: 0.35 }}
+          className="glass-card p-6 sm:p-8 flex flex-col items-center justify-center hover:border-purple-500/30 hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.2)] transition-all duration-500"
+        >
+          <div className="flex flex-col items-center text-center gap-2 mb-4">
+             <Target className="h-8 w-8 text-zinc-700" />
+             <h3 className="text-sm font-black text-white uppercase tracking-widest italic">Logic Distribution</h3>
+          </div>
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={chartData} innerRadius={60} outerRadius={85} paddingAngle={8} dataKey="value" stroke="none">
+                  {chartData.map((e, i) => <Cell key={i} fill={e.fill} />)}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: '#000', border: 'none', borderRadius: '8px' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="grid grid-cols-3 gap-4 w-full mt-6">
+             {chartData.map(d => (
+               <div key={d.name} className="flex flex-col items-center gap-1">
+                  <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{d.name}</span>
+                  <span className="text-sm font-black text-white">{d.value}</span>
+               </div>
+             ))}
+          </div>
+        </motion.div>
+
+      </div>
+
+      {/* Intelligence Insights Row */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        
+        {/* Rule Efficiency */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4, scale: 1.02 }} transition={{ delay: 0.4 }}
+          className="glass-card p-6 hover:border-purple-500/30 hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.2)] transition-all duration-500"
+        >
+          <div className="flex items-center justify-between mb-6">
+             <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                <ShieldCheck className="h-3.5 w-3.5" /> Rule Efficiency
+             </h4>
+             <a href="/rules" className="text-[9px] font-black text-purple-400 hover:text-white transition-colors">OPTIMIZE</a>
+          </div>
+          <div className="space-y-4">
+             {analytics.ruleEfficiency.length === 0 ? (
+               <p className="text-zinc-700 italic text-xs py-4 text-center">No rule hits recorded.</p>
+             ) : (
+               analytics.ruleEfficiency.slice(0, 4).map((r: any) => (
+                <div key={r.rule_id} className="space-y-1.5">
+                   <div className="flex justify-between text-[10px] font-bold">
+                      <span className="text-zinc-400 truncate pr-4">{r.rule_name}</span>
+                      <span className="text-white">{r.hits} Hits</span>
+                   </div>
+                   <div className="h-1 w-full bg-zinc-900 rounded-full overflow-hidden">
+                      <div className="h-full bg-cyan-500" style={{ width: `${Math.min(100, (r.hits / metrics.total) * 500)}%` }} />
+                   </div>
+                </div>
+               ))
+             )}
+          </div>
+        </motion.div>
+
+        {/* Noise Attribution */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4, scale: 1.02 }} transition={{ delay: 0.45 }}
+          className="glass-card p-6 hover:border-purple-500/30 hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.2)] transition-all duration-500"
+        >
+          <div className="flex items-center justify-between mb-6">
+             <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                <TrendingDown className="h-3.5 w-3.5" /> Noise Sources
+             </h4>
+          </div>
+          <div className="space-y-4">
+             {analytics.noiseSources.length === 0 ? (
+               <p className="text-zinc-700 italic text-xs py-4 text-center">Noise levels nominal.</p>
+             ) : (
+               analytics.noiseSources.slice(0, 4).map((n: any, i: number) => (
+                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5">
+                   <div className="flex items-center gap-3">
+                      <div className={`h-1.5 w-1.5 rounded-full ${n.decision === 'NEVER' ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                      <span className="text-xs font-bold text-zinc-300">{n.source}</span>
+                   </div>
+                   <span className="text-[10px] font-black text-zinc-600 uppercase italic">{n.count} Deflections</span>
+                </div>
+               ))
+             )}
+          </div>
+        </motion.div>
+
+        {/* AI Performance */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4, scale: 1.02 }} transition={{ delay: 0.5 }}
+          className="glass-card p-6 border-l-2 border-l-purple-600 hover:border-purple-500/50 hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.2)] transition-all duration-500"
+        >
+          <div className="flex items-center justify-between mb-6">
+             <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                <Microscope className="h-3.5 w-3.5" /> Cognitive Performance
+             </h4>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+             <div className="space-y-1">
+                <span className="text-[10px] font-bold text-zinc-600 block uppercase">Confidence</span>
+                <span className="text-2xl font-black text-white tabular-nums italic">{Math.round((analytics.aiMetrics?.avgConfidence || 0) * 100)}%</span>
+             </div>
+             <div className="space-y-1">
+                <span className="text-[10px] font-bold text-zinc-600 block uppercase">Fallbacks</span>
+                <span className="text-2xl font-black text-rose-500 tabular-nums italic">{Math.round((analytics.aiMetrics?.fallbackRate || 0) * 100)}%</span>
+             </div>
+          </div>
+          <p className="mt-8 text-[9px] font-black text-zinc-700 uppercase tracking-widest italic flex items-center gap-2">
+             <Brain className="h-3 w-3" /> Based on last {analytics.aiMetrics?.totalAnalyses} packets
+          </p>
+        </motion.div>
+
       </div>
 
       {/* Recent Activity Feed */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="glass-card p-6 sm:p-8"
+        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} whileHover={{ y: -4, scale: 1.01 }} transition={{ delay: 0.55 }}
+        className="glass-card p-6 sm:p-8 hover:border-purple-500/30 hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.2)] transition-all duration-500"
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg sm:text-xl font-semibold text-white">Recent Activity</h3>
-          <a href="/audit" className="text-[10px] font-bold uppercase tracking-widest text-purple-400 hover:text-white transition-colors flex items-center gap-1">
-            View All <ChevronRight className="h-3 w-3" />
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="text-lg font-black text-white italic uppercase tracking-tighter">Live Decision Stream</h3>
+          <a href="/audit" className="text-[10px] font-black uppercase tracking-widest text-purple-400 hover:text-white transition-colors flex items-center gap-1">
+            Historical Archive <ChevronRight className="h-3 w-3" />
           </a>
         </div>
 
-        {!mounted ? (
-          <div className="py-8 text-center text-zinc-600 italic">Loading...</div>
-        ) : metrics.recent?.length === 0 ? (
-          <div className="py-8 text-center text-zinc-600 italic">No decisions yet — submit an event from the Simulator.</div>
-        ) : (
-          <div className="space-y-2">
-            {metrics.recent.slice(0, 3).map((entry: any) => {
-              const ev = entry.notification_events;
-              return (
-                <div key={entry.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/5 transition-colors">
-                  <div className="shrink-0">
-                    <DecisionDot decision={entry.decision} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white font-medium truncate">
-                      {ev?.title || 'Untitled'}
-                    </p>
-                    <p className="text-[11px] text-zinc-600 truncate">
-                      {entry.reason}
-                    </p>
-                  </div>
-                  <div className="hidden sm:flex flex-col items-end gap-0.5 shrink-0">
-                    <span className={`text-[10px] font-bold uppercase tracking-widest ${decisionTextColor(entry.decision)}`}>
-                      {entry.decision}
-                    </span>
-                    <span className="text-[10px] text-zinc-600">
-                      {formatDistanceToNow(new Date(entry.processed_at), { addSuffix: true })}
-                    </span>
-                  </div>
-                  {/* Mobile decision badge */}
-                  <div className="sm:hidden shrink-0">
-                    <span className={`text-[10px] font-bold uppercase ${decisionTextColor(entry.decision)}`}>
-                      {entry.decision}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <div className="space-y-2">
+          {metrics.recent.slice(0, 3).map((entry: any) => (
+            <div key={entry.id} className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] hover:bg-white/5 transition-all border border-transparent hover:border-white/5 group">
+              <div className="shrink-0">
+                <div className={`h-2.5 w-2.5 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] ${DecisionDotColor(entry.decision)}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-white font-black uppercase italic truncate group-hover:text-purple-400 transition-colors">
+                  {entry.notification_events?.title || 'Packet Overload'}
+                </p>
+                <p className="text-[11px] text-zinc-600 font-medium truncate mt-0.5">&ldquo;{entry.reason}&rdquo;</p>
+              </div>
+              <div className="flex flex-col items-end gap-0.5 shrink-0">
+                <span className={`text-[10px] font-black uppercase tracking-widest italic ${decisionTextColor(entry.decision)}`}>
+                  {entry.decision}
+                </span>
+                <span className="text-[10px] text-zinc-700 font-bold uppercase">
+                  {formatDistanceToNow(new Date(entry.processed_at), { addSuffix: true })}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </motion.div>
     </div>
   );
+}
+
+function DecisionDotColor(d: string) {
+  switch (d) {
+    case 'NOW': return 'bg-emerald-500 shadow-emerald-500/20';
+    case 'LATER': return 'bg-amber-500 shadow-amber-500/20';
+    case 'NEVER': return 'bg-rose-500 shadow-rose-500/20';
+    default: return 'bg-zinc-600';
+  }
 }
 
 function decisionTextColor(d: string) {
@@ -355,46 +380,33 @@ function decisionTextColor(d: string) {
     case 'NOW': return 'text-emerald-400';
     case 'LATER': return 'text-amber-400';
     case 'NEVER': return 'text-rose-400';
-    case 'SENT': return 'text-purple-400';
-    case 'FAILED': return 'text-red-400';
     default: return 'text-zinc-400';
   }
 }
 
-function DecisionDot({ decision }: { decision: string }) {
-  const bg = {
-    NOW: 'bg-emerald-500',
-    LATER: 'bg-amber-500',
-    NEVER: 'bg-rose-500',
-    SENT: 'bg-purple-500',
-    FAILED: 'bg-red-500',
-  }[decision] || 'bg-zinc-500';
-
-  return <span className={`block h-2.5 w-2.5 rounded-full ${bg} shadow-lg`} />;
-}
-
 function MetricCard({ label, value, icon: Icon, color, delay }: any) {
   const colors: any = {
-    emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
-    amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
-    rose: 'text-rose-400 bg-rose-500/10 border-rose-500/20',
-    zinc: 'text-zinc-400 bg-zinc-500/10 border-white/5',
-    purple: 'text-purple-400 bg-purple-500/10 border-purple-500/20',
+    emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20 shadow-emerald-500/5',
+    amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20 shadow-amber-500/5',
+    rose: 'text-rose-400 bg-rose-500/10 border-rose-500/20 shadow-rose-500/5',
+    zinc: 'text-zinc-500 bg-zinc-500/10 border-white/5',
+    purple: 'text-purple-400 bg-purple-500/10 border-purple-500/20 shadow-purple-500/5',
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ y: -5, scale: 1.02 }}
       transition={{ delay }}
-      className="glass-card p-4 sm:p-6 flex flex-col gap-3 group hover:border-white/20 transition-all duration-300"
+      className="glass-card p-5 sm:p-7 flex flex-col gap-4 group hover:border-purple-500/30 hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.2)] transition-all duration-500"
     >
-      <div className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl border ${colors[color]} group-hover:scale-110 transition-transform`}>
+      <div className={`flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-[18px] border ${colors[color]} group-hover:rotate-6 transition-transform`}>
         <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
       </div>
       <div>
-        <span className="text-[10px] sm:text-sm font-medium text-zinc-500 uppercase tracking-wide">{label}</span>
-        <div className="text-2xl sm:text-3xl font-bold text-white mt-0.5 tabular-nums">{value.toLocaleString()}</div>
+        <span className="text-[10px] sm:text-xs font-black text-zinc-600 uppercase tracking-[0.2em]">{label}</span>
+        <div className="text-2xl sm:text-3xl font-black text-white mt-1 tabular-nums italic">{value.toLocaleString()}</div>
       </div>
     </motion.div>
   );
@@ -402,15 +414,15 @@ function MetricCard({ label, value, icon: Icon, color, delay }: any) {
 
 function StatusBadge({ label, value, icon: Icon, color }: any) {
   const colors: any = {
-    emerald: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    amber: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    purple: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    emerald: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-emerald-500/10',
+    amber: 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-amber-500/10',
+    purple: 'bg-purple-500/10 text-purple-400 border-purple-500/20 shadow-purple-500/10',
   };
 
   return (
-    <div className={`flex items-center gap-2 rounded-full border px-3 sm:px-4 py-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider ${colors[color]}`}>
-      <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-      <span className="opacity-60">{label}:</span>
+    <div className={`flex items-center gap-2.5 rounded-2xl border px-4 py-2 text-[10px] font-black uppercase tracking-widest shadow-xl transition-all hover:scale-105 ${colors[color]}`}>
+      <Icon className="h-3.5 w-3.5" />
+      <span className="opacity-40">{label}:</span>
       <span>{value}</span>
     </div>
   );
