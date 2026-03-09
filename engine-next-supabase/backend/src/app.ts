@@ -1,6 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config(); // Must be first — loads env vars before any other module reads them
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { supabase } from './utils/supabaseClient';
 import { SchedulerService } from './services/SchedulerService';
 import { AIService } from './services/AIService';
@@ -10,12 +12,27 @@ import notificationRoutes from './routes/notificationRoutes';
 import ruleRoutes from './routes/ruleRoutes';
 import deferredQueueRoutes from './routes/deferredQueueRoutes';
 
-dotenv.config();
-
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+// Restrict CORS to the frontend origin
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:3000',
+  'http://127.0.0.1:3000',
+];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g. curl, Postman, same-origin)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
+      }
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // Start the background jobs

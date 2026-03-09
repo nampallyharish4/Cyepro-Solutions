@@ -8,42 +8,48 @@ import {
   Lock,
   Mail,
   ArrowRight,
-  ShieldAlert,
   Terminal,
   AlertCircle,
+  UserPlus,
 } from 'lucide-react';
 import axios from 'axios';
 
-export default function Login() {
+export default function Signup() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
-    email: 'admin@cyepro.com',
-    password: 'password123',
+    email: '',
+    password: '',
+    confirm: '',
   });
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
-    // Basic client-side validation
     if (!form.email || !form.password) {
       setError('Email and password are required.');
-      setLoading(false);
+      return;
+    }
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    if (form.password !== form.confirm) {
+      setError('Passwords do not match.');
       return;
     }
 
+    setLoading(true);
     try {
       const apiBase =
         process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api';
-      const { data } = await axios.post(`${apiBase}/login`, {
+      const { data } = await axios.post(`${apiBase}/signup`, {
         email: form.email.trim().toLowerCase(),
         password: form.password,
       });
       localStorage.setItem('token', data.token);
-      // Store basic user info so the sidebar / pages can read role
       localStorage.setItem('user', JSON.stringify(data.user));
       router.push('/');
     } catch (err: any) {
@@ -51,7 +57,7 @@ export default function Login() {
         err?.response?.data?.error ||
         (err?.code === 'ERR_NETWORK'
           ? 'Cannot reach the server. Make sure the backend is running on port 5000.'
-          : 'Login failed. Please check your credentials.');
+          : 'Signup failed. Please try again.');
       setError(msg);
     } finally {
       setLoading(false);
@@ -67,15 +73,18 @@ export default function Login() {
             <Zap className="h-10 w-10 text-white" />
           </div>
           <div className="space-y-2">
+            <h1 className="text-4xl font-black tracking-tight text-white uppercase italic">
+              Create Account
+            </h1>
             <p className="text-zinc-500 font-medium">
               Notification Prioritization Engine v2.1
             </p>
           </div>
         </div>
 
-        {/* Login Form */}
+        {/* Signup Form */}
         <div className="glass-card p-10 neon-border-purple space-y-8">
-          <form onSubmit={handleLogin} className="space-y-6">
+          <form onSubmit={handleSignup} className="space-y-6">
             {/* Error Banner */}
             {error && (
               <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3">
@@ -86,16 +95,17 @@ export default function Login() {
 
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-                Access Key (Email)
+                Email Address
               </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-600" />
                 <input
-                  id="login-email"
+                  id="signup-email"
                   type="email"
                   autoComplete="email"
                   required
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                  placeholder="you@example.com"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
                   value={form.email}
                   onChange={(e) => {
                     setError(null);
@@ -107,16 +117,17 @@ export default function Login() {
 
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-                Master Secret
+                Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-600" />
                 <input
-                  id="login-password"
+                  id="signup-password"
                   type="password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                  placeholder="Min. 6 characters"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
                   value={form.password}
                   onChange={(e) => {
                     setError(null);
@@ -126,69 +137,59 @@ export default function Login() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-600" />
+                <input
+                  id="signup-confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  placeholder="Re-enter password"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white placeholder:text-zinc-700 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                  value={form.confirm}
+                  onChange={(e) => {
+                    setError(null);
+                    setForm({ ...form, confirm: e.target.value });
+                  }}
+                />
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
+              id="signup-submit"
               className="glass-button w-full bg-purple-600 hover:bg-purple-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black uppercase tracking-[0.1em] flex items-center justify-center gap-3 py-5 transition-all"
             >
               {loading ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Authenticating...
+                  Creating Account...
                 </>
               ) : (
                 <>
-                  Engage System
+                  <UserPlus className="h-5 w-5" />
+                  Create Account
                   <ArrowRight className="h-5 w-5" />
                 </>
               )}
             </button>
           </form>
 
-          {/* Sign up link */}
+          {/* Sign in link */}
           <p className="text-center text-sm text-zinc-500">
-            Don&apos;t have an account?{' '}
+            Already have an account?{' '}
             <Link
-              href="/signup"
+              href="/login"
               className="font-semibold text-purple-400 hover:text-purple-300 transition-colors"
             >
-              Create one
+              Sign in
             </Link>
           </p>
-
-          {/* Mock Credentials Badge */}
-          <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex gap-4">
-            <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
-            <div className="text-xs text-amber-500/80 leading-relaxed font-medium">
-              <strong>Reviewer Credentials:</strong>
-              <div className="mt-2 space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 w-16">
-                    Admin
-                  </span>
-                  <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
-                    admin@cyepro.com
-                  </code>
-                  <span className="text-amber-500/40">|</span>
-                  <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
-                    password123
-                  </code>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 w-16">
-                    Operator
-                  </span>
-                  <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
-                    operator@cyepro.com
-                  </code>
-                  <span className="text-amber-500/40">|</span>
-                  <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
-                    operator123
-                  </code>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Footer */}
