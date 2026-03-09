@@ -7,8 +7,7 @@ This document describes the production deployment strategy for the Notification 
 | Service | Provider | URL |
 |---------|----------|-----|
 | Frontend | Vercel | https://cyepro-solutions.vercel.app |
-| Backend | Render | https://cyepro-notification-engine-backend.onrender.com |
-| Health Endpoint | Render | https://cyepro-notification-engine-backend.onrender.com/health |
+
 | Database | Supabase | Managed PostgreSQL (cloud) |
 | Repository | GitHub | https://github.com/nampallyharish4/Cyepro-Solutions.git |
 

@@ -17,8 +17,7 @@ The latest evolution adds a strategic control layer to the autonomous decision p
 ## Live Deployments
 
 - **Frontend (Vercel)**: https://cyepro-solutions.vercel.app
-- **Backend (Render)**: https://cyepro-notification-engine-backend.onrender.com
-- **Health Endpoint**: https://cyepro-notification-engine-backend.onrender.com/health
+
 - **GitHub Repository**: https://github.com/nampallyharish4/Cyepro-Solutions.git
 
 ## Tech Stack
