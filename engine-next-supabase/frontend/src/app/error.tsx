@@ -29,7 +29,7 @@ export default function GlobalError({
         </div>
         
         <div className="space-y-2">
-          <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">System Fault</h2>
+          <h2 className="text-2xl font-black uppercase tracking-tighter text-white">System Fault</h2>
           <p className="text-sm font-medium text-zinc-400 leading-relaxed">
             The Interface Engine encountered an unexpected segmentation fault while attempting to render this node.
           </p>

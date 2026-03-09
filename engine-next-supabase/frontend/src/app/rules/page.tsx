@@ -406,7 +406,7 @@ export default function RulesManager() {
                    <Microscope className="h-4 w-4" />
                 </div>
                 <div>
-                   <h4 className="text-sm font-black text-white uppercase italic">Validation Sandbox</h4>
+                   <h4 className="text-sm font-black text-white uppercase">Validation Sandbox</h4>
                    <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Test this protocol before saving</p>
                 </div>
              </div>
@@ -442,11 +442,11 @@ export default function RulesManager() {
                               <p className={`text-xs font-black uppercase tracking-widest ${dryRunResult.matched ? 'text-emerald-400' : 'text-rose-400'}`}>
                                  {dryRunResult.matched ? 'PROTOCOL MATCHED' : 'PROTOCOL SKIPPED'}
                               </p>
-                              <p className="text-[11px] text-zinc-500 font-medium mt-1 italic">{dryRunResult.reason}</p>
+                               <p className="text-[11px] text-zinc-500 font-medium mt-1">{dryRunResult.reason}</p>
                               {dryRunResult.matched && (
-                                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500 text-black text-[10px] font-black uppercase tracking-tighter italic">
-                                   Output: {dryRunResult.decision}
-                                </div>
+                                 <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500 text-black text-[10px] font-black uppercase tracking-tighter">
+                                    Output: {dryRunResult.decision}
+                                 </div>
                               )}
                            </div>
                         </motion.div>

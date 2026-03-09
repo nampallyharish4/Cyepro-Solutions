@@ -18,7 +18,7 @@ export default function GlobalNotFound() {
         </div>
         
         <div className="space-y-2">
-          <h2 className="text-4xl font-black italic tracking-tighter text-white">404</h2>
+          <h2 className="text-4xl font-black tracking-tighter text-white">404</h2>
           <p className="text-xs uppercase tracking-widest font-black text-zinc-500">
             VECTOR ENDPOINT NOT FOUND
           </p>

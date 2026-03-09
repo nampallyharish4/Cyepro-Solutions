@@ -150,7 +150,7 @@ export function Sidebar() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/20">
             <Send className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white uppercase italic">Cyepro AI</span>
+          <span className="text-xl font-bold tracking-tight text-white uppercase">Cyepro AI</span>
         </div>
 
         <nav className="flex flex-1 items-center justify-start gap-2 overflow-x-auto overflow-y-hidden px-4 md:block md:space-y-1 md:overflow-visible md:px-2">
@@ -204,7 +204,7 @@ export function Sidebar() {
               <div className="space-y-1">
                  <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest block">Active Architect</span>
                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-black text-purple-400 italic uppercase">{model}</span>
+                    <span className="text-[11px] font-black text-purple-400 uppercase">{model}</span>
                     <Link href="/settings">
                        <ChevronRight className="h-3 w-3 text-zinc-700 hover:text-white transition-colors cursor-pointer" />
                     </Link>

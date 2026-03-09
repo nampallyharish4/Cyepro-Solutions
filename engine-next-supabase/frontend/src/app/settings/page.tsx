@@ -95,7 +95,7 @@ export default function IntelligenceSettings() {
           <div className="h-10 w-10 rounded-2xl bg-zinc-950 border border-white/5 flex items-center justify-center text-zinc-500">
             <Settings className="h-6 w-6" />
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter italic uppercase">Intelligence Tuning</h1>
+          <h1 className="text-4xl font-black text-white tracking-tighter uppercase">Intelligence Tuning</h1>
         </div>
         <p className="text-zinc-500 font-medium max-w-2xl">Modify global cognitive parameters in real-time. Changes are applied instantly to the decision pipeline without restart.</p>
       </div>
@@ -222,7 +222,7 @@ function SettingsCard({ icon: Icon, title, subtitle, children }: { icon: any; ti
           <Icon className="h-6 w-6" />
         </div>
         <div>
-          <h3 className="text-lg font-black text-white italic uppercase tracking-tighter">{title}</h3>
+          <h3 className="text-lg font-black text-white uppercase tracking-tighter">{title}</h3>
           <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{subtitle}</p>
         </div>
       </div>

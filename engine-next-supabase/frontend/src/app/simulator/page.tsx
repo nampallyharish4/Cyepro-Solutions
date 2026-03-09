@@ -195,7 +195,7 @@ export default function Simulator() {
            <div className="h-12 w-12 rounded-2xl bg-purple-600/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-[0_0_20px_rgba(147,51,234,0.1)]">
               <Rocket className="h-6 w-6" />
            </div>
-           <h1 className="text-4xl sm:text-5xl font-black text-white italic tracking-tighter uppercase underline decoration-purple-600/30 underline-offset-8">
+           <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tighter uppercase underline decoration-purple-600/30 underline-offset-8">
               System Simulator
            </h1>
         </div>
@@ -208,7 +208,7 @@ export default function Simulator() {
         <motion.section initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass-card p-6 sm:p-10 border-t-2 border-t-purple-600">
           <div className="flex items-center gap-3 mb-10">
              <Terminal className="h-5 w-5 text-purple-400" />
-             <h3 className="text-sm font-black text-white uppercase tracking-[0.3em] italic">Packet Configuration</h3>
+             <h3 className="text-sm font-black text-white uppercase tracking-[0.3em]">Packet Configuration</h3>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8">
@@ -227,7 +227,7 @@ export default function Simulator() {
                   <select
                     value={form.channel}
                     onChange={(e) => setForm({ ...form, channel: e.target.value })}
-                    className="w-full bg-white/[0.02] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-purple-500/50 appearance-none font-bold italic"
+                    className="w-full bg-white/[0.02] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white focus:outline-none focus:border-purple-500/50 appearance-none font-bold"
                   >
                     {CHANNELS.map((ch) => <option key={ch} value={ch} className="bg-zinc-950">{ch}</option>)}
                   </select>
@@ -271,7 +271,7 @@ export default function Simulator() {
               />
             </div>
 
-            <button disabled={loading} className="relative w-full overflow-hidden rounded-[24px] bg-purple-600 py-4 font-black uppercase italic tracking-[0.4em] text-white shadow-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 group">
+            <button disabled={loading} className="relative w-full overflow-hidden rounded-[24px] bg-purple-600 py-4 font-black uppercase tracking-[0.4em] text-white shadow-2xl transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 group">
               {loading ? 'Orchestrating...' : 'Launch Packet'}
             </button>
           </form>
@@ -282,7 +282,7 @@ export default function Simulator() {
             <div className="flex items-center justify-between mb-10">
                <div className="flex items-center gap-3">
                   <Fingerprint className="h-5 w-5 text-purple-400" />
-                  <h3 className="text-sm font-black text-white uppercase tracking-[0.3em] italic">Analysis</h3>
+                  <h3 className="text-sm font-black text-white uppercase tracking-[0.3em]">Analysis</h3>
                </div>
             </div>
 
@@ -296,7 +296,7 @@ export default function Simulator() {
                 ) : result.error ? (
                   <div className="flex flex-col items-center justify-center h-full text-rose-500 gap-4">
                     <Ban className="h-8 w-8" />
-                    <p className="font-black uppercase tracking-widest italic text-sm">System Conflict</p>
+                    <p className="font-black uppercase tracking-widest text-sm">System Conflict</p>
                   </div>
                 ) : (
                   <div className="space-y-8">
@@ -306,7 +306,7 @@ export default function Simulator() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-1">Pipeline Consensus</p>
-                          <h4 className="text-4xl font-black text-white italic uppercase">{result.decision || result.status}</h4>
+                          <h4 className="text-4xl font-black text-white uppercase">{result.decision || result.status}</h4>
                         </div>
                     </div>
                     <ForensicRow label="Global Event ID" value={result.event_id} />
@@ -319,15 +319,15 @@ export default function Simulator() {
 
           {history.length > 0 && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-6 sm:p-8">
-               <h4 className="text-[11px] font-black text-white uppercase italic tracking-widest mb-8">Decision Stream</h4>
+               <h4 className="text-[11px] font-black text-white uppercase tracking-widest mb-8">Decision Stream</h4>
                <div className="space-y-3">
                   {history.map((h, i) => (
                     <button key={h.id} onClick={() => setResult(h)} className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-transparent hover:border-white/5 transition-all text-left">
                       <div className={`h-3 w-3 rounded-full ${DecisionDotColor(h.decision)}`} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white font-black italic uppercase truncate">{h._form?.title || 'Packet Burst'}</p>
+                        <p className="text-sm text-white font-black uppercase truncate">{h._form?.title || 'Packet Burst'}</p>
                       </div>
-                      <span className={`text-[10px] font-black uppercase italic ${decisionColor(h.decision)}`}>{h.decision}</span>
+                      <span className={`text-[10px] font-black uppercase ${decisionColor(h.decision)}`}>{h.decision}</span>
                     </button>
                   ))}
                </div>
@@ -352,7 +352,7 @@ function ForensicRow({ label, value, highlight }: { label: string; value: string
   return (
     <div className="space-y-1.5 border-b border-white/5 pb-4">
       <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-700 block">{label}</span>
-      <p className={`text-sm break-all font-bold ${highlight ? 'text-zinc-200 italic' : 'text-zinc-500 font-mono text-[11px]'}`}>{value}</p>
+      <p className={`text-sm break-all font-bold ${highlight ? 'text-zinc-200' : 'text-zinc-500 font-mono text-[11px]'}`}>{value}</p>
     </div>
   );
 }

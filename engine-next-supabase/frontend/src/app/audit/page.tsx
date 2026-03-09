@@ -94,7 +94,7 @@ export default function AuditArchive() {
           <div className="h-10 w-10 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
             <Activity className="h-6 w-6" />
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tight uppercase italic underline decoration-purple-600/30 underline-offset-8">
+          <h1 className="text-4xl font-black text-white tracking-tight uppercase underline decoration-purple-600/30 underline-offset-8">
             Audit Archive
           </h1>
         </div>
@@ -164,7 +164,7 @@ export default function AuditArchive() {
                       {log.processed_at && formatDistanceToNow(new Date(log.processed_at), { addSuffix: true })}
                     </span>
                   </div>
-                  <h3 className="truncate text-base font-black text-white italic uppercase">{log.notification_events?.title || 'System Packet'}</h3>
+                  <h3 className="truncate text-base font-black text-white uppercase">{log.notification_events?.title || 'System Packet'}</h3>
                   <p className="truncate text-xs text-zinc-500 mt-1">{log.reason}</p>
                 </div>
 
@@ -200,7 +200,7 @@ export default function AuditArchive() {
 
                         <DataSection label="Engine Explainability">
                           <div className="rounded-2xl bg-zinc-900/50 p-5 border border-white/5 mb-4">
-                             <p className="text-xs text-zinc-500 font-bold italic leading-relaxed">&quot;{log.reason}&quot;</p>
+                             <p className="text-xs text-zinc-500 font-bold leading-relaxed">&quot;{log.reason}&quot;</p>
                           </div>
                           <button 
                             onClick={(e) => { e.stopPropagation(); setExplainingLog(log); }}
@@ -216,14 +216,14 @@ export default function AuditArchive() {
                             <div className="grid grid-cols-2 gap-3">
                                <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
                                   <span className="block text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1">Method</span>
-                                  <span className="text-xs font-black text-white flex items-center gap-1.5 uppercase tracking-tighter italic font-mono">
+                                  <span className="text-xs font-black text-white flex items-center gap-1.5 uppercase tracking-tighter font-mono">
                                     {log.rule_id ? <Shield className="h-3 w-3 text-cyan-500" /> : <Brain className="h-3 w-3 text-purple-500" />}
                                     {log.rule_id ? 'Rules-Logic' : 'Intelligence'}
                                   </span>
                                </div>
                                <div className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/5">
                                   <span className="block text-[9px] font-black text-zinc-600 uppercase tracking-widest mb-1">Confidence</span>
-                                  <span className="text-xs font-black text-emerald-400 uppercase tracking-tighter italic">{log.ai_confidence ? `${Math.round(log.ai_confidence * 100)}%` : '100% (Rule)'}</span>
+                                  <span className="text-xs font-black text-emerald-400 uppercase tracking-tighter">{log.ai_confidence ? `${Math.round(log.ai_confidence * 100)}%` : '100% (Rule)'}</span>
                                </div>
                             </div>
                          </DataSection>
@@ -254,9 +254,9 @@ export default function AuditArchive() {
            </button>
            <div className="flex items-center gap-3">
              <span className="text-xs font-black text-zinc-600 uppercase tracking-widest">Page</span>
-             <span className="text-lg font-black text-white italic">{page}</span>
+             <span className="text-lg font-black text-white">{page}</span>
              <span className="text-xs font-black text-zinc-600 uppercase tracking-widest">Of</span>
-             <span className="text-lg font-black text-zinc-600 italic">{totalPages}</span>
+             <span className="text-lg font-black text-zinc-600">{totalPages}</span>
            </div>
            <button 
              onClick={() => setPage(p => Math.min(totalPages, p+1))}
@@ -296,7 +296,7 @@ function ExplainModal({ log, onClose }: { log: any; onClose: () => void }) {
                 <Brain className="h-10 w-10 text-white" />
              </div>
              <div className="space-y-1">
-                <h2 className="text-3xl font-black text-white tracking-tight uppercase italic underline decoration-purple-600/40">Trace Logic Flow</h2>
+                <h2 className="text-3xl font-black text-white tracking-tight uppercase underline decoration-purple-600/40">Trace Logic Flow</h2>
                 <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">Cognitive Debugging for Event #{log.id.slice(0,8)}</p>
              </div>
           </div>
@@ -304,7 +304,7 @@ function ExplainModal({ log, onClose }: { log: any; onClose: () => void }) {
           <div className="relative space-y-0">
              <div className="absolute left-[27px] top-0 bottom-0 w-1 bg-white/[0.03] rounded-full" />
              {steps.length === 0 ? (
-               <p className="text-center py-10 text-zinc-700 italic">No historical trace steps available for this entry.</p>
+               <p className="text-center py-10 text-zinc-700">No historical trace steps available for this entry.</p>
              ) : (
                steps.map((step: any, idx: number) => (
                  <motion.div 
@@ -321,14 +321,14 @@ function ExplainModal({ log, onClose }: { log: any; onClose: () => void }) {
                     <div className="space-y-2">
                        <div className="flex items-center justify-between">
                           <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{step.stage.replace(/_/g, ' ')}</span>
-                          <span className="text-[10px] font-bold text-zinc-800 font-mono italic">{format(new Date(step.timestamp), 'HH:mm:ss.SS')}</span>
+                          <span className="text-[10px] font-bold text-zinc-800 font-mono">{format(new Date(step.timestamp), 'HH:mm:ss.SS')}</span>
                        </div>
                        <div className="glass-card p-5 group-hover:border-purple-500/40 transition-all">
                           <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase mb-2 ${
                             step.status === 'PASSED' ? 'bg-zinc-800 text-zinc-500' : 
                             step.status === 'MATCHED' || step.status === 'TRIPPED' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-purple-500/20 text-purple-400'
                           }`}>{step.status}</span>
-                          <p className="text-sm text-white font-medium italic">&quot;{step.details}&quot;</p>
+                          <p className="text-sm text-white font-medium">&quot;{step.details}&quot;</p>
                        </div>
                     </div>
                  </motion.div>
@@ -336,10 +336,10 @@ function ExplainModal({ log, onClose }: { log: any; onClose: () => void }) {
              )}
 
              <div className="relative pl-20 mt-4">
-               <div className="absolute left-[18px] top-1.5 h-[20px] w-[20px] rounded bg-purple-500 flex items-center justify-center text-white border-4 border-[#0c0c0e] z-10 italic font-black text-[10px]">!</div>
+               <div className="absolute left-[18px] top-1.5 h-[20px] w-[20px] rounded bg-purple-500 flex items-center justify-center text-white border-4 border-[#0c0c0e] z-10 font-black text-[10px]">!</div>
                <div className="space-y-1">
                  <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest">Execution Result</span>
-                 <h4 className="text-2xl font-black text-white italic underline decoration-purple-500/40">{log.decision} PRIORITY</h4>
+                 <h4 className="text-2xl font-black text-white underline decoration-purple-500/40">{log.decision} PRIORITY</h4>
                  <p className="text-xs text-zinc-600 mt-2 font-medium">&ldquo;{log.reason}&rdquo;</p>
                </div>
              </div>
