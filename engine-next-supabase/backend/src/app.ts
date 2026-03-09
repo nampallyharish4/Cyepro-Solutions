@@ -15,21 +15,10 @@ import deferredQueueRoutes from './routes/deferredQueueRoutes';
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Restrict CORS to the frontend origin
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:3000',
-  'http://127.0.0.1:3000',
-];
+// Relax CORS for local development
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. curl, Postman, same-origin)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS: origin '${origin}' not allowed`));
-      }
-    },
+    origin: true, // Allow all origins to connect (reflects origin back)
     credentials: true,
   }),
 );
