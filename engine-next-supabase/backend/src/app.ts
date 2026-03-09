@@ -3,6 +3,9 @@ dotenv.config(); // Must be first — loads env vars before any other module rea
 
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import { supabase } from './utils/supabaseClient';
 import { SchedulerService } from './services/SchedulerService';
 import { AIService } from './services/AIService';
@@ -15,13 +18,32 @@ import deferredQueueRoutes from './routes/deferredQueueRoutes';
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Relax CORS for local development
+// 1. Security Headers
+app.use(helmet());
+
+// 2. Structured Request Logging (Production style)
+app.use(morgan('short'));
+
+// 3. CORS Configuration (Strict in Prod)
+const isProd = process.env.NODE_ENV === 'production';
 app.use(
   cors({
-    origin: true, // Allow all origins to connect (reflects origin back)
+    origin: isProd ? (process.env.FRONTEND_URL || 'https://cyepro-solutions.vercel.app') : true,
     credentials: true,
   }),
 );
+
+// 4. Rate Limiting (Protects from brute-force & spam)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, // Limit each IP to 500 requests per `window`
+  message: 'Too many requests from this IP, please try again after 15 minutes.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api', apiLimiter);
+
+// 5. Body Parsing
 app.use(express.json());
 
 // Start the background jobs

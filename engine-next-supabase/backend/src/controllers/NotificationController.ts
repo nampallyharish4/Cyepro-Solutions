@@ -10,6 +10,14 @@ export class NotificationController {
   static async submitEvent(req: Request, res: Response) {
     try {
       const eventData = req.body;
+      
+      // Strict input validation to prevent engine crashes
+      if (!eventData.user_id || !eventData.event_type || !eventData.title) {
+        return res.status(400).json({ 
+          error: 'Validation Exception: Missing required fields (user_id, event_type, title)' 
+        });
+      }
+
       const result = await DecisionEngine.processEvent(eventData);
 
       return res.status(202).json({
@@ -176,53 +184,75 @@ export class NotificationController {
    * Create a Rule
    */
   static async createRule(req: Request, res: Response) {
-    const { data, error } = await supabase
-      .from('rules')
-      .insert([req.body])
-      .select()
-      .single();
-    if (error) return res.status(500).json(error);
-    return res.status(201).json(data);
+    try {
+      const { name, condition_type, condition_value, target_priority } = req.body;
+      
+      if (!name || !condition_type || !condition_value || !target_priority) {
+         return res.status(400).json({ error: 'Validation Exception: Missing required protocol parameters.' });
+      }
+
+      const { data, error } = await supabase
+        .from('rules')
+        .insert([req.body])
+        .select()
+        .single();
+        
+      if (error) throw error;
+      return res.status(201).json(data);
+    } catch (e: any) {
+      console.error('Create Rule Exception:', e);
+      return res.status(500).json({ error: 'Failed to create tracking protocol.', details: e.message });
+    }
   }
 
   /**
    * Update (Edit) a Rule
    */
   static async updateRule(req: Request, res: Response) {
-    const { id } = req.params;
-    const updates = req.body;
-    updates.updated_at = new Date().toISOString();
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      updates.updated_at = new Date().toISOString();
 
-    const { data, error } = await supabase
-      .from('rules')
-      .update(updates)
-      .eq('id', id)
-      .eq('is_active', true)
-      .select()
-      .single();
+      const { data, error } = await supabase
+        .from('rules')
+        .update(updates)
+        .eq('id', id)
+        .eq('is_active', true)
+        .select()
+        .single();
 
-    if (error) return res.status(500).json(error);
-    if (!data)
-      return res
-        .status(404)
-        .json({ error: 'Rule not found or already deleted' });
-    return res.json(data);
+      if (error) throw error;
+      if (!data) return res.status(404).json({ error: 'Rule not found or already deleted.' });
+      
+      return res.json(data);
+    } catch (e: any) {
+      console.error('Update Rule Exception:', e);
+      return res.status(500).json({ error: 'Failed to update protocol logic.', details: e.message });
+    }
   }
 
   /**
    * Soft-delete a Rule — "Deleted data must be recoverable — hard deletes are not acceptable."
    */
   static async deleteRule(req: Request, res: Response) {
-    const { id } = req.params;
-    const { data, error } = await supabase
-      .from('rules')
-      .update({ is_active: false, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      const { id } = req.params;
+      const { data, error } = await supabase
+        .from('rules')
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) return res.status(500).json(error);
-    return res.json(data);
+      if (error) throw error;
+      if (!data) return res.status(404).json({ error: 'Rule not found.' });
+      
+      return res.json(data);
+    } catch (e: any) {
+      console.error('Delete Rule Exception:', e);
+      return res.status(500).json({ error: 'Failed to safely archive protocol.', details: e.message });
+    }
   }
 
   /**
