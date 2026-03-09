@@ -110,11 +110,11 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col gap-2"
       >
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white uppercase italic underline decoration-purple-600/30 underline-offset-8">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white uppercase underline decoration-purple-600/30 underline-offset-8">
           Engine Command
         </h1>
-        <p className="text-base sm:text-lg text-zinc-500 font-medium">
-          Strategic overview of system intelligence & cognitive performance.
+        <p className="text-sm sm:text-lg text-zinc-500 font-medium">
+          Strategic overview of system intelligence &amp; cognitive performance.
         </p>
       </motion.div>
 
@@ -123,7 +123,7 @@ export default function Dashboard() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="flex flex-wrap items-center gap-3"
+        className="flex flex-wrap items-center gap-2 sm:gap-3"
       >
         <StatusBadge
           label="System"
@@ -166,7 +166,7 @@ export default function Dashboard() {
           className="lg:col-span-2 glass-card p-6 sm:p-8 hover:border-purple-500/30 hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.2)] transition-all duration-500"
         >
           <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-lg font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
+            <h3 className="text-lg font-black text-white uppercase tracking-tighter flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-purple-400" />
               Cognitive Trends (24h)
             </h3>
@@ -200,7 +200,7 @@ export default function Dashboard() {
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-zinc-700 italic font-medium">Synthesizing timeline data...</div>
+              <div className="flex h-full items-center justify-center text-zinc-700 font-medium">Synthesizing timeline data...</div>
             )}
           </div>
         </motion.div>
@@ -215,7 +215,7 @@ export default function Dashboard() {
         >
           <div className="flex flex-col items-center text-center gap-2 mb-4">
              <Target className="h-8 w-8 text-zinc-700" />
-             <h3 className="text-sm font-black text-white uppercase tracking-widest italic">Logic Distribution</h3>
+             <h3 className="text-sm font-black text-white uppercase tracking-widest">Logic Distribution</h3>
           </div>
           <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -255,7 +255,7 @@ export default function Dashboard() {
           </div>
           <div className="space-y-4">
              {analytics.ruleEfficiency.length === 0 ? (
-               <p className="text-zinc-700 italic text-xs py-4 text-center">No rule hits recorded.</p>
+               <p className="text-zinc-700 text-xs py-4 text-center">No rule hits recorded.</p>
              ) : (
                analytics.ruleEfficiency.slice(0, 4).map((r: any) => (
                 <div key={r.rule_id} className="space-y-1.5">
@@ -284,7 +284,7 @@ export default function Dashboard() {
           </div>
           <div className="space-y-4">
              {analytics.noiseSources.length === 0 ? (
-               <p className="text-zinc-700 italic text-xs py-4 text-center">Noise levels nominal.</p>
+               <p className="text-zinc-700 text-xs py-4 text-center">Noise levels nominal.</p>
              ) : (
                analytics.noiseSources.slice(0, 4).map((n: any, i: number) => (
                 <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-white/[0.02] border border-white/5">
@@ -292,7 +292,7 @@ export default function Dashboard() {
                       <div className={`h-1.5 w-1.5 rounded-full ${n.decision === 'NEVER' ? 'bg-rose-500' : 'bg-amber-500'}`} />
                       <span className="text-xs font-bold text-zinc-300">{n.source}</span>
                    </div>
-                   <span className="text-[10px] font-black text-zinc-600 uppercase italic">{n.count} Deflections</span>
+                   <span className="text-[10px] font-black text-zinc-600 uppercase">{n.count} Deflections</span>
                 </div>
                ))
              )}
@@ -312,14 +312,14 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 gap-4">
              <div className="space-y-1">
                 <span className="text-[10px] font-bold text-zinc-600 block uppercase">Confidence</span>
-                <span className="text-2xl font-black text-white tabular-nums italic">{Math.round((analytics.aiMetrics?.avgConfidence || 0) * 100)}%</span>
+                <span className="text-2xl font-black text-white tabular-nums">{Math.round((analytics.aiMetrics?.avgConfidence || 0) * 100)}%</span>
              </div>
              <div className="space-y-1">
                 <span className="text-[10px] font-bold text-zinc-600 block uppercase">Fallbacks</span>
-                <span className="text-2xl font-black text-rose-500 tabular-nums italic">{Math.round((analytics.aiMetrics?.fallbackRate || 0) * 100)}%</span>
+                <span className="text-2xl font-black text-rose-500 tabular-nums">{Math.round((analytics.aiMetrics?.fallbackRate || 0) * 100)}%</span>
              </div>
           </div>
-          <p className="mt-8 text-[9px] font-black text-zinc-700 uppercase tracking-widest italic flex items-center gap-2">
+          <p className="mt-8 text-[9px] font-black text-zinc-700 uppercase tracking-widest flex items-center gap-2">
              <Brain className="h-3 w-3" /> Based on last {analytics.aiMetrics?.totalAnalyses} packets
           </p>
         </motion.div>
@@ -332,7 +332,7 @@ export default function Dashboard() {
         className="glass-card p-6 sm:p-8 hover:border-purple-500/30 hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.2)] transition-all duration-500"
       >
         <div className="mb-6 flex items-center justify-between">
-          <h3 className="text-lg font-black text-white italic uppercase tracking-tighter">Live Decision Stream</h3>
+          <h3 className="text-lg font-black text-white uppercase tracking-tighter">Live Decision Stream</h3>
           <a href="/audit" className="text-[10px] font-black uppercase tracking-widest text-purple-400 hover:text-white transition-colors flex items-center gap-1">
             Historical Archive <ChevronRight className="h-3 w-3" />
           </a>
@@ -340,21 +340,21 @@ export default function Dashboard() {
 
         <div className="space-y-2">
           {metrics.recent.slice(0, 3).map((entry: any) => (
-            <div key={entry.id} className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] hover:bg-white/5 transition-all border border-transparent hover:border-white/5 group">
+            <div key={entry.id} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-white/[0.02] hover:bg-white/5 transition-all border border-transparent hover:border-white/5 group">
               <div className="shrink-0">
                 <div className={`h-2.5 w-2.5 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] ${DecisionDotColor(entry.decision)}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white font-black uppercase italic truncate group-hover:text-purple-400 transition-colors">
+                <p className="text-xs sm:text-sm text-white font-black uppercase truncate group-hover:text-purple-400 transition-colors">
                   {entry.notification_events?.title || 'Packet Overload'}
                 </p>
-                <p className="text-[11px] text-zinc-600 font-medium truncate mt-0.5">&ldquo;{entry.reason}&rdquo;</p>
+                <p className="text-[10px] sm:text-[11px] text-zinc-600 font-medium truncate mt-0.5">&ldquo;{entry.reason}&rdquo;</p>
               </div>
               <div className="flex flex-col items-end gap-0.5 shrink-0">
-                <span className={`text-[10px] font-black uppercase tracking-widest italic ${decisionTextColor(entry.decision)}`}>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${decisionTextColor(entry.decision)}`}>
                   {entry.decision}
                 </span>
-                <span className="text-[10px] text-zinc-700 font-bold uppercase">
+                <span className="text-[10px] text-zinc-700 font-bold uppercase hidden sm:block">
                   {formatDistanceToNow(new Date(entry.processed_at), { addSuffix: true })}
                 </span>
               </div>
@@ -406,7 +406,7 @@ function MetricCard({ label, value, icon: Icon, color, delay }: any) {
       </div>
       <div>
         <span className="text-[10px] sm:text-xs font-black text-zinc-600 uppercase tracking-[0.2em]">{label}</span>
-        <div className="text-2xl sm:text-3xl font-black text-white mt-1 tabular-nums italic">{value.toLocaleString()}</div>
+        <div className="text-2xl sm:text-3xl font-black text-white mt-1 tabular-nums">{value.toLocaleString()}</div>
       </div>
     </motion.div>
   );

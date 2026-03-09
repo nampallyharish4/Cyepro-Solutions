@@ -89,7 +89,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
     <>
       <KBar />
       {!isPublicPage && <Sidebar />}
-      <main className={cn('flex-1 px-4 pt-8 pb-24 md:h-screen md:overflow-y-auto md:px-10 md:py-16', isPublicPage && 'flex items-center justify-center p-0 pb-0')}>
+      <main className={cn('flex-1 px-4 pt-6 pb-28 md:h-screen md:overflow-y-auto md:px-10 md:py-16 md:pb-16', isPublicPage && 'flex items-center justify-center p-0 pb-0')}>
         <div className={cn('mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-5 duration-700', isPublicPage && 'w-full max-w-none')}>
           {children}
         </div>
@@ -102,7 +102,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
             initial={{ opacity: 0, scale: 0.9, y: 50, x: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20, transition: { duration: 0.2 } }}
-            className="fixed bottom-24 right-6 md:bottom-10 md:right-10 z-[500] w-[320px] overflow-hidden rounded-2xl border border-emerald-500/20 bg-zinc-900/95 p-4 shadow-2xl shadow-emerald-500/10 backdrop-blur-xl"
+            className="fixed bottom-20 right-3 md:bottom-10 md:right-10 z-[500] w-[calc(100vw-1.5rem)] max-w-[320px] overflow-hidden rounded-2xl border border-emerald-500/20 bg-zinc-900/95 p-4 shadow-2xl shadow-emerald-500/10 backdrop-blur-xl"
           >
             <div className="flex items-start gap-4">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">

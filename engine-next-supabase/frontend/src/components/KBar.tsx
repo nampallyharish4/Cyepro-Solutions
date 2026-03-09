@@ -147,7 +147,7 @@ export function KBar() {
                             <span className="flex-1 text-left text-sm font-semibold">{item.label}</span>
                             {isSelected && (
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-zinc-600 uppercase italic">Enter to jump</span>
+                                <span className="text-[10px] font-bold text-zinc-600 uppercase">Enter to jump</span>
                                 <ArrowRight className="h-4 w-4 text-purple-500" />
                               </div>
                             )}

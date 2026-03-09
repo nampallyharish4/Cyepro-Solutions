@@ -307,13 +307,13 @@ export default function Signup() {
               <Zap className="h-10 w-10 text-white" />
             </div>
             <div className="space-y-1">
-              <h1 className="text-4xl font-black tracking-tight text-white uppercase italic">Create Account</h1>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase">Create Account</h1>
               <p className="text-zinc-500 font-medium">Notification Prioritization Engine v2.1</p>
             </div>
           </div>
 
           {/* Form card */}
-          <div className="glass-card p-10 neon-border-purple space-y-6">
+          <div className="glass-card p-6 sm:p-10 neon-border-purple space-y-6">
             <form onSubmit={handleSignup} className="space-y-5">
 
               {/* Email */}

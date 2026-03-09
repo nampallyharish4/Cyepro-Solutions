@@ -17,8 +17,6 @@ The system flows through a **Deterministic → Intelligent → Fail-Safe** pipel
 | Service | URL |
 |---------|-----|
 | Frontend (Vercel) | https://cyepro-solutions.vercel.app |
-| Backend (Render) | https://cyepro-notification-engine-backend.onrender.com |
-| Health Endpoint | https://cyepro-notification-engine-backend.onrender.com/health |
 | GitHub Repository | https://github.com/nampallyharish4/Cyepro-Solutions.git |
 
 ## Tech Stack

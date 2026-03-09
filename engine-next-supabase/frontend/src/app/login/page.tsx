@@ -261,7 +261,7 @@ export default function Login() {
           </div>
 
           {/* Login Form */}
-          <div className="glass-card p-10 neon-border-purple space-y-8">
+          <div className="glass-card p-6 sm:p-10 neon-border-purple space-y-8">
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
@@ -334,14 +334,14 @@ export default function Login() {
               <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
               <div className="text-xs text-amber-500/80 leading-relaxed font-medium">
                 <strong>Reviewer Credentials:</strong>
-                <div className="mt-2 space-y-1.5">
-                  <div className="flex items-center gap-2">
+                <div className="mt-2 space-y-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 w-16">Admin</span>
                     <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">admin@cyepro.com</code>
                     <span className="text-amber-500/40">|</span>
                     <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">password123</code>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 w-16">Operator</span>
                     <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">operator@cyepro.com</code>
                     <span className="text-amber-500/40">|</span>
