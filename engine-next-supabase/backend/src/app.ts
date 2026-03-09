@@ -32,14 +32,19 @@ app.get('/health', async (req: Request, res: Response) => {
   const aiStatus = AIService.getStatus();
 
   let dbStatus = 'CONNECTED';
+  let dbErrorDetail = null;
   try {
     const { error } = await supabase
       .from('notification_events')
       .select('id')
       .limit(1);
-    if (error) dbStatus = 'ERROR';
-  } catch (e) {
+    if (error) {
+      dbStatus = 'ERROR';
+      dbErrorDetail = error;
+    }
+  } catch (e: any) {
     dbStatus = 'DISCONNECTED';
+    dbErrorDetail = e.message;
   }
 
   res.status(200).json({
@@ -51,6 +56,7 @@ app.get('/health', async (req: Request, res: Response) => {
       ? 'CONFIGURED'
       : 'MISSING',
     database: dbStatus,
+    database_error: dbErrorDetail,
     ai_service: {
       status: aiStatus.circuitBreaker === 'CLOSED' ? 'HEALTHY' : 'CIRCUIT_OPEN',
       ...aiStatus,
