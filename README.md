@@ -1,26 +1,35 @@
-# Cyepro AI - Notification Prioritization Engine
+# Cyepro AI — Notification Prioritization Engine
 
 ## Overview
-This project implements an intelligent notification management system that classifies events, prevents spam, and ensures critical alerts reach users immediately (NOW), while deferring informational ones (LATER) or dropping noise (NEVER).
 
-The system flows through a **Deterministic -> Intelligent -> Fail-Safe** pipeline:
-1. **Deduplication**: Checks for exact `dedupe_key` or 80%+ text similarity in the last 24h using PostgreSQL `pg_trgm`.
-2. **Rules**: Evaluates human-defined patterns from the Rules Manager.
-3. **AI Analysis (Asynchronous)**: If undecided by rules, Groq (Llama-3.3-70b-versatile) performs sub-second semantic analysis.
-4. **Fatigue Check**: Prevents spam by capping "NOW" notifications (Admin configurable custom thresholds).
-5. **Fail-Safe Circuit Breaker**: Hard 3-second timeout. If AI fails, an exponential retry kicks in. If that fails, a circuit breaker trips, and the engine defaults to a "Safe LATER" priority with a fallback reason to guarantee zero data loss.
+An intelligent notification management system that classifies events, prevents spam, and ensures critical alerts reach users immediately (**NOW**), while deferring informational ones (**LATER**) or dropping noise (**NEVER**).
+
+The system flows through a **Deterministic → Intelligent → Fail-Safe** pipeline:
+
+1. **Expiry Check**: Events with `expires_at` in the past → **NEVER** immediately.
+2. **Deduplication**: Exact `dedupe_key` match **or** `pg_trgm` similarity > 0.8 in last 24h → **NEVER**.
+3. **Rules**: Human-defined patterns evaluated in `priority_order DESC`. First match wins; AI bypassed.
+4. **Fatigue Check**: Per-user NOW count in a 60-minute rolling window capped by `FATIGUE_LIMIT` (admin-configurable at runtime, no restart needed).
+5. **Fail-Safe Circuit Breaker**: Hard 3-second timeout per LLM call. Exponential retry (2 attempts). If AI fails, circuit breaker trips after 5 failures, defaulting events to safe **LATER** — **zero data loss guaranteed**.
 
 ## Live Deployments
-- **Frontend (Vercel)**: https://cyepro-solutions.vercel.app
-- **Backend (Render)**: https://cyepro-notification-engine-backend.onrender.com
-- **Health Endpoint**: https://cyepro-notification-engine-backend.onrender.com/health
-- **GitHub Repository**: https://github.com/nampallyharish4/Cyepro-Solutions.git
+
+| Service | URL |
+|---------|-----|
+| Frontend (Vercel) | https://cyepro-solutions.vercel.app |
+| Backend (Render) | https://cyepro-notification-engine-backend.onrender.com |
+| Health Endpoint | https://cyepro-notification-engine-backend.onrender.com/health |
+| GitHub Repository | https://github.com/nampallyharish4/Cyepro-Solutions.git |
 
 ## Tech Stack
-- **Frontend**: Next.js 16 (App Router) with Tailwind CSS, Framer Motion, and Recharts. Chosen for its performance, SEO-friendliness, and rapid development of premium management consoles.
-- **Backend**: Node.js/Express.js with TypeScript and Supabase Admin SDK. Chosen for reliability in orchestration and simple AI integration.
-- **Database**: Supabase (PostgreSQL). Chosen over MongoDB for strict schema safety, relational integrity (essential for audit trails), and advanced text similarity features (`pg_trgm`).
-- **AI**: **Groq (Llama-3.3-70b-versatile)** for ultra-fast (sub-second) classification logic. Google Gemini is available as an active fallback layer.
+
+| Layer | Technology | Reason |
+|-------|-----------|--------|
+| **Frontend** | Next.js 15 (App Router), Tailwind CSS, Framer Motion, Recharts | Performance, SEO, premium management console UX |
+| **Backend** | Node.js / Express.js, TypeScript, Supabase Admin SDK | Reliable orchestration, simple AI integration |
+| **Database** | Supabase (PostgreSQL) | Strict schema safety, relational integrity for audit trails, `pg_trgm` near-duplicate text detection |
+| **AI (Primary)** | Groq (Llama-3.3-70b-versatile) | Sub-second LPU inference |
+| **AI (Fallback)** | Google Gemini | Automatic secondary fallback |
 
 ## Setup & Running
 
@@ -30,30 +39,33 @@ The system flows through a **Deterministic -> Intelligent -> Fail-Safe** pipelin
 - Supabase Project (PostgreSQL)
 
 ### Environment Variables
-You must create `.env` files in both the frontend and backend using the `.env.example` configurations as templates.
 
 **Backend (`engine-next-supabase/backend/.env`)**
-- `SUPABASE_URL`: The URL to your Supabase project.
-- `SUPABASE_SERVICE_ROLE_KEY`: The secret service role key to bypass RLS.
-- `GROQ_API_KEY`: API Key from Groq Cloud for fast Llama-3 inference.
-- `MODEL_NAME`: The model string (e.g., `llama-3.3-70b-versatile`).
-- `GEMINI_API_KEY`: (Optional fallback) Google Gemini API Key.
-- `JWT_SECRET`: A secret string used to sign auth tokens for the admin login.
-- `PORT`: (Optional) Port to run the server on, default 5000.
+| Variable | Description |
+|----------|-------------|
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (bypasses RLS) |
+| `GROQ_API_KEY` | Groq Cloud API key |
+| `MODEL_NAME` | e.g. `llama-3.3-70b-versatile` |
+| `GEMINI_API_KEY` | (Optional) Google Gemini API Key |
+| `JWT_SECRET` | Token signing secret |
+| `PORT` | (Optional) Default `5000` |
 
 **Frontend (`engine-next-supabase/frontend/.env.local`)**
-- `NEXT_PUBLIC_SUPABASE_URL`: The URL to your Supabase project.
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: The public anon key for Supabase client.
-- `NEXT_PUBLIC_API_URL`: The URL pointing to your backend (e.g., `http://127.0.0.1:5000/api` locally, or `https://cyepro-notification-engine-backend.onrender.com/api` in production).
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key |
+| `NEXT_PUBLIC_API_URL` | Backend URL (local: `http://127.0.0.1:5000/api`) |
 
 ### Local Execution Runbook
-1. **Database**: Run the SQL schema found in the database directory in your Supabase SQL Editor to provision your `pg_trgm` extensions, `audit_logs`, `rules`, and `notification_events` tables.
+
+1. **Database**: Run `engine-next-supabase/backend/database/migrations/01_init_schema.sql` in your Supabase SQL Editor.
 2. **Backend**:
    ```bash
    cd engine-next-supabase/backend
    npm install
-   npm run build
-   npm start
+   npm run dev
    ```
 3. **Frontend**:
    ```bash
@@ -63,34 +75,46 @@ You must create `.env` files in both the frontend and backend using the `.env.ex
    ```
 
 ## AI Integration & Prompts
+
 - **Primary Provider**: Groq Cloud (LPU Inference)
 - **Model**: `llama-3.3-70b-versatile`
-- **Prompt Formulation**: 
+- **Prompt**:
   ```text
-  You are a Notification Prioritization Engine. 
+  You are a Notification Prioritization Engine.
   - NOW: Critical security, OTP, or immediate fatal failure.
   - LATER: Warnings (low balance, disk space), daily updates, non-critical alerts.
   - NEVER: Spam, ads, gamification noise.
   Return strict JSON: {"priority":"NOW"|"LATER"|"NEVER", "reason":"string", "confidence":float}
   ```
-- **Parsing Output**: The system expects a strict JSON object back. It parses `priority`, `reason`, and `confidence` and passes it to the Decision Engine to route the notification.
 
-### What happens when the AI is unavailable? (Architecture Resilience)
-1. The backend implements `axios-retry` using an exponential backoff to attempt rapid retries if the initial Groq network request fails.
-2. If all requests time out (hard 3-second limit per request) or receives a 429 Quota Rate Limit error, the system throws a localized exception.
-3. The `catch` block intercepts the error, increments a static `circuitBreakerFailureCount`, and logs the failure locally.
-4. The system immediately executes `fallBack(friendlyError, 0.0)`.
-5. The original event is gracefully assigned a `LATER` priority and an explainable reason (e.g., "Safe Fallback: Authorization Network Error").
-6. The event is safely stored in the Audit Database and queued for later background processing, ensuring **zero data loss for the business**.
-7. If the Circuit Breaker trips completely OPEN, it means all subsequent events bypass the AI entirely for 5 minutes, instantly receiving the safe fallback, serving to protect and backoff API system resources.
+### AI Failure Resilience
+1. `axiosRetry` with 2 retries (500ms / 1000ms backoff) on network failure.
+2. Hard 3-second timeout per LLM request.
+3. 429 quota errors → instant fallback (no retry waste).
+4. `catch` block → `circuitBreakerFailureCount++` → `fallBack(reason, 0.0)`.
+5. Event assigned **LATER** + `is_fallback: true` + stored in `audit_logs` and `deferred_queue`.
+6. After 5 consecutive failures → Circuit Breaker **OPEN** for 5 minutes.
 
-## Known Limitations & Deliberate Design Choices
-1. **Single Stack Submission Requirement**: Due to time constraints and a focus on building one high-quality, production-ready, fail-safe architecture, the Java/Spring Boot stack was omitted. This assignment relies exclusively on the Node.js/Next.js/Supabase implementation to demonstrate deep feature completeness across the core requirements (exponential circuit breaking, `pg_trgm` PostgreSQL near-duplicate detection, soft-deletion architectures, and dynamic runtime alert fatigue modification).
-2. **PostgreSQL vs MongoDB**: I intentionally elected to use Supabase (PostgreSQL) instead of MongoDB. While MongoDB is traditionally "MERN", PostgreSQL's `pg_trgm` extension is dramatically superior for exact string and near-duplicate text semantic detection without relying on heavy external vector databases. Furthermore, it strictly enforces relational integrity across event audits!
-3. **Queue Scalability**: The `LATER` queue is currently processed by an async background interval poller running on the main Node thread. For massive production scale, this would temporarily throttle the V8 event loop and would need to be moved to a dedicated Redis/BullMQ worker cluster architecture.
-4. **Soft Deletes Protocol**: Deletions in the frontend AI Rules Engine execute a database soft-delete (modifying an `is_active` boolean flag) to strictly adhere to the prompt requirement that "deleted data must be recoverable — hard deletes are not acceptable."
+## Key Design Decisions
+
+### What the frontend does differently
+- **Login "Stay" fix**: Token is held in React state only until the user confirms "Enter System". Clicking "Stay" discards credentials — no auto-login on modal dismiss.
+- **Logout confirmation**: A confirmation modal prevents accidental session termination.
+- **Rules null-safety**: `getRules` always returns `[]`, frontend guards `.find()` / `.filter()` with `Array.isArray()`.
+- **Loaders everywhere**: Triple-ring spinner for page-level loading, skeleton rows/cards for data tables/lists.
+
+### PostgreSQL vs MongoDB
+`pg_trgm` provides superior near-duplicate text detection without external vector databases, and enforces relational integrity across event audits.
+
+### Soft Deletes
+All rule deletions set `is_active = false` — hard deletes are never executed, preserving full data recovery capability.
+
+### Queue Scalability
+The LATER queue uses a 1-minute `setInterval` poller. Production scale would require Redis/BullMQ, but this implementation demonstrates the full lifecycle (WAITING → PROCESSING → SENT / FAILED → DEAD_LETTER).
 
 ## Additional Documentation
-- [TEST_CASES_DOCUMENTATION.md](./TEST_CASES_DOCUMENTATION.md) - Outlines full manual testing instructions mimicking real-world edge cases. Explains exactly how a reviewer can intentionally break the AI API Key logic in the `.env` to visually demonstrate the Circuit Breaker saving data!
-- [ARCHITECTURE_DECISIONS.md](./engine-next-supabase/ARCHITECTURE_DECISIONS.md) - Full technical details and justification on tech stack choice and design flow.
-- [DEPLOYMENT.md](./engine-next-supabase/DEPLOYMENT.md) - Exact live URLs and cloud configuration details.
+
+- [TEST_CASES_DOCUMENTATION.md](./TEST_CASES_DOCUMENTATION.md) — 50+ structured manual test cases
+- [engine-next-supabase/PLAN_OF_ACTION.md](./engine-next-supabase/PLAN_OF_ACTION.md) — Phased development log
+- [engine-next-supabase/SYSTEM_WORKFLOW.md](./engine-next-supabase/SYSTEM_WORKFLOW.md) — Runtime logic and failure flows
+- [engine-next-supabase/DEPLOYMENT.md](./engine-next-supabase/DEPLOYMENT.md) — Live URLs and cloud configuration

@@ -21,9 +21,10 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import { formatDistanceToNow } from 'date-fns';
+import { PageLoader } from '@/components/PageLoader';
 
 const FILTERS = ['ALL', 'NOW', 'LATER', 'NEVER', 'SENT', 'FAILED'] as const;
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 4;
 
 export default function AuditLog() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -125,9 +126,7 @@ export default function AuditLog() {
       {/* Log Entries */}
       <div className="space-y-3">
         {!mounted || loading ? (
-          <div className="py-20 text-center text-zinc-600 font-medium">
-            Decrypting logs...
-          </div>
+          <PageLoader label="Decrypting logs…" />
         ) : filteredLogs.length === 0 ? (
           <div className="py-20 text-center text-zinc-600 font-medium">
             No audit entries match your filters.

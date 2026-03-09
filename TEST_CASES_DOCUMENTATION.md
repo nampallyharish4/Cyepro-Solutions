@@ -6,7 +6,7 @@
 > - **Backend**: https://cyepro-notification-engine-backend.onrender.com
 > - **Health**: https://cyepro-notification-engine-backend.onrender.com/health
 
-This document provides **50+ structured test cases** covering every requirement from the build test document. Tests are organized by system capability: Authentication, AI Classification, Deduplication, Alert Fatigue, Rule Engine, Fail-Safe Architecture, LATER Queue, Dashboard & Metrics, Audit Logging, and API Contract.
+This document provides **50+ structured test cases** covering every requirement from the build test document, plus additional UX and auth flow tests added during Phase 4 hardening. Tests are organised by system capability.
 
 **Credentials for all tests:**
 | Role | Email | Password |
@@ -34,7 +34,8 @@ This document provides **50+ structured test cases** covering every requirement 
 14. [UI Responsiveness & Mobile-First](#-14-ui-responsiveness--mobile-first)
 15. [End-to-End Happy Path](#-15-end-to-end-happy-path)
 16. [Simulator UI — Copy-Paste Test Cases](#️-16-simulator-ui--copy-paste-test-cases)
-17. [Verification Checklist](#-verification-checklist)
+17. [UX & Auth Flow Tests (Phase 4)](#-17-ux--auth-flow-tests-phase-4)
+18. [Verification Checklist](#-verification-checklist)
 
 ---
 
@@ -892,7 +893,90 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 
 ---
 
-## �🚦 Verification Checklist
+## 🖥️ 17. UX & Auth Flow Tests (Phase 4)
+
+### TC-17.1: Login — "Stay" Does Not Auto-Login
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Enter valid admin credentials and click **Sign In** | Success modal appears ("Access Granted") |
+| 2 | Click **"Stay"** button | Modal closes, stays on `/login` page |
+| 3 | Refresh the page | Still on `/login` — `localStorage` is empty, no auto-redirect |
+| **Validates** | Token is held in React state only, not committed until "Enter System" |
+
+### TC-17.2: Login — "Enter System" Commits Token and Navigates
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Enter valid credentials → click Sign In → modal appears | Success modal |
+| 2 | Click **"Enter System"** | Token written to `localStorage`, redirect to `/` dashboard |
+| 3 | Refresh dashboard | Still logged in — token persisted |
+
+### TC-17.3: Login — Error Modal on Wrong Credentials
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Enter wrong password and click Sign In | "Access Denied" error modal appears |
+| 2 | Click ✕ or outside the modal | Modal closes, stays on `/login` |
+
+### TC-17.4: Logout — Confirmation Modal
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Login and navigate to any page | Sidebar visible |
+| 2 | Click **Logout** in sidebar | Confirmation modal appears ("Sign Out?") |
+| 3 | Click **"Stay Logged In"** | Modal closes, still logged in |
+| 4 | Click Logout again → click **"Sign Out"** | `localStorage` cleared, redirected to `/login` |
+
+### TC-17.5: Auth Guard — Unauthenticated Redirect
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Clear `localStorage` manually | — |
+| 2 | Navigate to `/` | Triple-ring loader appears briefly, then redirect to `/login` |
+
+### TC-17.6: Auth Guard — Already Logged In
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | With a valid token in `localStorage`, navigate to `/login` | Triple-ring loader, then redirect to `/` |
+
+### TC-17.7: Loading States — All Data Pages
+
+| Page | Loader |
+|------|--------|
+| Auth guard | Full-screen triple-ring centered (fixed inset-0) |
+| Audit Log | `PageLoader` spinner while fetching |
+| LATER Queue | `PageLoader` spinner while fetching |
+| Rules — desktop | `SkeletonRow` shimmer (table rows) |
+| Rules — mobile | `SkeletonCard` shimmer (card blocks) |
+
+### TC-17.8: Rules Page — Error Banner on API Failure
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Stop the backend server | — |
+| 2 | Navigate to `/rules` | Red error banner appears: "Failed to load rules" with specific error message |
+| 3 | Restart backend → click **Retry** | Rules load normally, error banner disappears |
+
+### TC-17.9: Signup — Password Strength Meter
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Navigate to `/signup`, start typing a password | Live strength bar appears below the field |
+| 2 | Type `abc` | Bar shows red / "Weak" |
+| 3 | Type `Abc123!@#` | Bar shows green / "Strong" |
+| 4 | Try to submit with a weak password | Error modal: "Password is too weak" |
+
+### TC-17.10: Signup — Duplicate Email Detection
+
+| Step | Action | Expected |
+|------|--------|----------|
+| 1 | Sign up with `admin@cyepro.com` | Error modal: "An account with this email already exists" |
+
+---
+
+## 🚦 Verification Checklist
 
 ### Audit & Logging
 
@@ -936,11 +1020,26 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 ### UI Pages
 
 - [ ] Login — shows both admin and operator credentials on the page
+- [ ] Login — "Stay" button keeps user on login page (no auto-login)
+- [ ] Login — "Enter System" commits token and navigates to dashboard
 - [ ] Simulator — all 10 input fields present, async result display
 - [ ] Dashboard — auto-refreshes, health badges, metric cards, charts
 - [ ] Audit — searchable, filterable, paginated, expandable rows
 - [ ] LATER Queue — status tabs, search, pagination, force-send
-- [ ] Rules — CRUD, fatigue threshold editable, mobile cards
+- [ ] Rules — CRUD, fatigue threshold editable, mobile cards, API error banner with Retry
+
+### UX & Auth Flow (Phase 4)
+
+- [ ] Logout button opens confirmation modal — only confirmed logout clears session
+- [ ] Auth guard shows full-screen centered triple-ring spinner while verifying token
+- [ ] Audit Log shows `PageLoader` spinner during initial data fetch
+- [ ] LATER Queue shows `PageLoader` spinner during initial data fetch
+- [ ] Rules page (desktop) shows skeleton shimmer rows while loading
+- [ ] Rules page (mobile) shows skeleton shimmer cards while loading
+- [ ] Rules page shows error banner with Retry when API is unreachable
+- [ ] Signup: live password strength meter updates as user types
+- [ ] Signup: duplicate email shows error modal
+- [ ] Signup: success modal redirects to `/login` (not dashboard)
 
 ### Deployment
 

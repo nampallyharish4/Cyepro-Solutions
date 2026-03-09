@@ -15,6 +15,7 @@ import {
   Clock,
 } from 'lucide-react';
 import api from '@/lib/api';
+import { PageLoader, SkeletonRow, SkeletonCard } from '@/components/PageLoader';
 
 interface Toast {
   id: number;
@@ -33,6 +34,7 @@ export default function RulesManager() {
   const [editForm, setEditForm] = useState<any>({});
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const [newRule, setNewRule] = useState({
     name: '',
@@ -56,14 +58,18 @@ export default function RulesManager() {
   const fetchRules = async () => {
     try {
       const { data } = await api.get('/rules');
-      const fatigueRule = data.find((r: any) => r.name === 'FATIGUE_LIMIT');
+      const list: any[] = Array.isArray(data) ? data : [];
+      const fatigueRule = list.find((r: any) => r.name === 'FATIGUE_LIMIT');
       if (fatigueRule) {
-        setFatigueLimit(parseInt(fatigueRule.condition_value));
+        setFatigueLimit(parseInt(fatigueRule.condition_value) || 5);
         setFatigueRuleId(fatigueRule.id);
       }
-      setRules(data.filter((r: any) => r.condition_type !== 'system_setting'));
-    } catch (e) {
-      console.error(e);
+      setRules(list.filter((r: any) => r.condition_type !== 'system_setting'));
+      setApiError(null);
+    } catch (e: any) {
+      const msg = e?.response?.data?.error || e?.message || 'Failed to load rules from server.';
+      setApiError(msg);
+      showToast(msg, 'error');
     } finally {
       setLoading(false);
     }
@@ -227,6 +233,23 @@ export default function RulesManager() {
         </button>
       </div>
 
+      {/* API Error Banner */}
+      {apiError && (
+        <div className="flex items-center gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-5 py-4">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-rose-400" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-rose-300">Failed to load rules</p>
+            <p className="text-xs text-rose-400/70 mt-0.5 truncate">{apiError}</p>
+          </div>
+          <button
+            onClick={() => { setApiError(null); setLoading(true); fetchRules(); }}
+            className="shrink-0 text-xs font-bold text-rose-400 hover:text-white border border-rose-500/30 hover:bg-rose-500/20 px-3 py-1.5 rounded-xl transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Global Fatigue Config */}
       <div className="glass-card p-5 sm:p-6 border-l-4 border-l-amber-500 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex-1">
@@ -378,14 +401,7 @@ export default function RulesManager() {
           </thead>
           <tbody className="divide-y divide-white/5">
             {loading ? (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="px-6 py-20 text-center text-zinc-600"
-                >
-                  Syncing rules...
-                </td>
-              </tr>
+              <SkeletonRow cols={6} rows={4} />
             ) : rules.length === 0 ? (
               <tr>
                 <td
@@ -586,8 +602,8 @@ export default function RulesManager() {
       {/* Rules — Mobile Card Layout */}
       <div className="md:hidden space-y-3">
         {loading ? (
-          <div className="glass-card p-10 text-center text-zinc-600">
-            Syncing rules...
+          <div className="space-y-3">
+            {[0,1,2,3].map(i => <SkeletonCard key={i} lines={3} />)}
           </div>
         ) : rules.length === 0 ? (
           <div className="glass-card p-10 text-center text-zinc-600">

@@ -158,12 +158,18 @@ export class NotificationController {
    * Get Rules
    */
   static async getRules(req: Request, res: Response) {
-    const { data } = await supabase
-      .from('rules')
-      .select('*')
-      .eq('is_active', true)
-      .order('priority_order', { ascending: false });
-    return res.json(data);
+    try {
+      const { data, error } = await supabase
+        .from('rules')
+        .select('*')
+        .eq('is_active', true)
+        .order('priority_order', { ascending: false });
+      if (error) throw error;
+      return res.json(data ?? []);
+    } catch (err) {
+      console.error('getRules error:', err);
+      return res.status(500).json([]);
+    }
   }
 
   /**

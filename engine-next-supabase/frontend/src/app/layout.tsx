@@ -19,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable} dark`} suppressHydrationWarning>
-      <body className="flex min-h-screen flex-col overflow-x-hidden md:flex-row" suppressHydrationWarning>
+      <body className="flex min-h-screen flex-col overflow-x-hidden md:flex-row md:overflow-hidden" suppressHydrationWarning>
         <LayoutContent>{children}</LayoutContent>
       </body>
     </html>

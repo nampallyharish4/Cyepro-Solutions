@@ -18,6 +18,7 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import api from '@/lib/api';
+import { PageLoader } from '@/components/PageLoader';
 import {
   formatDistanceToNow,
   differenceInMinutes,
@@ -195,7 +196,7 @@ export default function LaterQueue() {
       {/* Queue Items */}
       <div className="space-y-3">
         {!mounted || loading ? (
-          <div className="py-20 text-center text-zinc-600">Syncing pipeline...</div>
+          <PageLoader label="Syncing pipeline…" />
         ) : items.length === 0 ? (
           <div className="py-20 text-center text-zinc-600">No items match the current filters.</div>
         ) : (

@@ -3,41 +3,56 @@
 This document describes the production deployment strategy for the Notification Prioritization Engine.
 
 ## Live Environment
-- **Frontend Architecture**: Deployed on **Vercel**.
-  - URL: https://cyepro-solutions.vercel.app
-- **Backend Architecture**: Scalable Node.js environment on **Render**.
-  - URL: https://cyepro-notification-engine-backend.onrender.com
-- **GitHub Repository**: https://github.com/nampallyharish4/Cyepro-Solutions.git
-- **Database Architecture**: Managed **Supabase (PostgreSQL)** instance.
 
-## Production Configuration
-
-### Environment Variables (Vercel/Render)
-- `SUPABASE_URL`: The API endpoint for the production Supabase project.
-- `SUPABASE_SERVICE_ROLE_KEY`: Elevated key for backend operations.
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Client-side key for frontend.
-- `NEXT_PUBLIC_API_URL`: Points to the deployed Render backend API.
-- `GROQ_API_KEY`: Secret key for LLM classification (Primary).
-- `MODEL_NAME`: The active LLM model (`llama-3.3-70b-versatile`).
-- `GEMINI_API_KEY`: Secret key for LLM classification (Fallback).
-- `JWT_SECRET`: Used for securing admin access.
-- `NODE_ENV`: Set to `production`.
-
-### Secrets Management
-- Backend secrets are managed via **Render Environment Variables**.
-- No credentials are committed to the repository.
-
-## Difference Between Local and Production
-- **Database**: Both Local and Production strictly use the managed cloud Postgres instance for consistency in debugging.
-- **SSL**: Production requires forced HTTPS for all API and frontend calls.
-- **AI Model**: Both Local and Production use `llama-3.3-70b-versatile` powered by Groq to guarantee deterministic sub-second performance across all environments.
-
-## Maintenance & Redeployment
-- **Frontend**: Automatically redeploys on every `git push` to the `main` branch via Vercel's GitHub integration.
-- **Backend**: Configured for CI/CD; pushes to `main` trigger a rolling update to the container service.
-- **Database Migrations**: SQL changes should be applied via the Supabase Migration CLI or Dashboard SQL Editor before new backend code is deployed.
+| Service | Provider | URL |
+|---------|----------|-----|
+| Frontend | Vercel | https://cyepro-solutions.vercel.app |
+| Backend | Render | https://cyepro-notification-engine-backend.onrender.com |
+| Health Endpoint | Render | https://cyepro-notification-engine-backend.onrender.com/health |
+| Database | Supabase | Managed PostgreSQL (cloud) |
+| Repository | GitHub | https://github.com/nampallyharish4/Cyepro-Solutions.git |
 
 ## Production Credentials
-Reviewers can access the live dashboard using the pre-filled credentials on the **Login** page:
-- **Email**: `admin@cyepro.com`
-- **Password**: `password123`
+
+Reviewers can access the live dashboard using the pre-filled credentials on the Login page:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@cyepro.com` | `password123` |
+| Operator | `operator@cyepro.com` | `operator123` |
+
+## Environment Variables (Vercel / Render)
+
+| Variable | Service | Description |
+|----------|---------|-------------|
+| `SUPABASE_URL` | Backend | Supabase project API endpoint |
+| `SUPABASE_SERVICE_ROLE_KEY` | Backend | Elevated key (bypasses RLS) |
+| `GROQ_API_KEY` | Backend | Groq Cloud LLM API key (Primary AI) |
+| `MODEL_NAME` | Backend | `llama-3.3-70b-versatile` |
+| `GEMINI_API_KEY` | Backend | Google Gemini API key (Fallback AI) |
+| `JWT_SECRET` | Backend | Token signing secret |
+| `NODE_ENV` | Backend | `production` |
+| `NEXT_PUBLIC_API_URL` | Frontend | Points to Render backend API |
+| `NEXT_PUBLIC_SUPABASE_URL` | Frontend | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Frontend | Supabase public anon key |
+
+## Secrets Management
+
+- All backend secrets are managed via **Render Environment Variables** (not committed to the repository).
+- Frontend public keys are managed via **Vercel Environment Variables**.
+
+## Local vs Production
+
+| Aspect | Local | Production |
+|--------|-------|------------|
+| Database | Shared Supabase cloud (same instance) | Same Supabase cloud instance |
+| Backend URL | `http://127.0.0.1:5000/api` | Render URL |
+| SSL | Not required | Forced HTTPS on all calls |
+| AI Model | `llama-3.3-70b-versatile` via Groq | Same model, same provider |
+
+## CI/CD & Maintenance
+
+- **Frontend**: Auto-deploys on every `git push` to `main` via Vercel GitHub integration.
+- **Backend**: Rolling update triggered on `main` push via Render deploy hooks.
+- **Database Migrations**: Apply SQL changes via Supabase Migration CLI or Dashboard SQL Editor **before** deploying new backend code.
+- **Scheduler**: Background `SchedulerService` runs within the Render container — processes the LATER queue every 1 minute automatically.

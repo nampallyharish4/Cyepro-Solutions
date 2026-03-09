@@ -34,13 +34,53 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
   // While we're checking auth, show a minimal loading state to avoid flash of protected content
   if (!authChecked) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-purple-500 border-t-transparent" />
-          <span className="text-xs font-bold uppercase tracking-widest text-zinc-600">
-            Verifying access...
-          </span>
+      <div
+        className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 bg-zinc-950"
+      >
+        {/* Triple-ring spinner */}
+        <div className="relative h-16 w-16">
+          {/* Outer ring — purple */}
+          <div
+            className="absolute inset-0 rounded-full border-2 border-transparent"
+            style={{
+              borderTopColor: '#a855f7',
+              borderRightColor: '#a855f7',
+              animation: 'spin 1.4s cubic-bezier(0.65,0,0.35,1) infinite',
+            }}
+          />
+          {/* Middle ring — emerald, reversed */}
+          <div
+            className="absolute rounded-full border-2 border-transparent"
+            style={{
+              inset: '7px',
+              borderBottomColor: '#10b981',
+              borderLeftColor: '#10b981',
+              animation: 'spin 1.0s cubic-bezier(0.65,0,0.35,1) infinite reverse',
+            }}
+          />
+          {/* Inner ring — blend */}
+          <div
+            className="absolute rounded-full border-2 border-transparent"
+            style={{
+              inset: '14px',
+              borderTopColor: 'rgba(168,85,247,0.5)',
+              borderRightColor: 'rgba(16,185,129,0.5)',
+              animation: 'spin 0.7s linear infinite',
+            }}
+          />
         </div>
+
+        {/* Label */}
+        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-600">
+          Verifying access…
+        </span>
+
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -50,7 +90,7 @@ export function LayoutContent({ children }: { children: React.ReactNode }) {
       {!isPublicPage && <Sidebar />}
       <main
         className={cn(
-          'flex-1 px-4 pt-8 pb-24 md:px-10 md:py-16',
+          'flex-1 px-4 pt-8 pb-24 md:h-screen md:overflow-y-auto md:px-10 md:py-16',
           isPublicPage && 'flex items-center justify-center p-0 pb-0',
         )}
       >

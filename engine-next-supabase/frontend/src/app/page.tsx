@@ -95,39 +95,49 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Health Status Bar */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-        className="flex flex-wrap items-center gap-3"
-      >
-        <StatusBadge
-          label="System"
-          value={health.status === 'OK' ? 'Healthy' : health.status === 'DEGRADED' ? 'Degraded' : health.status}
-          icon={ActivityIcon}
-          color={health.status === 'OK' ? 'emerald' : 'amber'}
-        />
-        <StatusBadge
-          label="Database"
-          value={dbHealthy ? 'Connected' : health.database || 'Unknown'}
-          icon={Database}
-          color={dbHealthy ? 'emerald' : 'amber'}
-        />
-        <StatusBadge
-          label="AI Service"
-          value={aiHealthy ? 'Operational' : aiStatus.circuitBreaker === 'OPEN' ? 'Circuit Open' : 'Degraded'}
-          icon={Brain}
-          color={aiHealthy ? 'purple' : 'amber'}
-        />
-        {aiStatus.failureCount > 0 && (
+      {!mounted || health.status !== 'OK' || !dbHealthy || !aiHealthy ? (
+        <motion.div
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           className="flex justify-start py-4"
+        >
+          <Loader />
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="flex flex-wrap items-center gap-3"
+        >
           <StatusBadge
-            label="AI Failures"
-            value={`${aiStatus.failureCount} / ${aiStatus.failureThreshold || 5}`}
-            icon={AlertTriangle}
-            color="amber"
+            label="System"
+            value={health.status === 'OK' ? 'Healthy' : health.status === 'DEGRADED' ? 'Degraded' : health.status}
+            icon={ActivityIcon}
+            color={health.status === 'OK' ? 'emerald' : 'amber'}
           />
-        )}
-      </motion.div>
+          <StatusBadge
+            label="Database"
+            value={dbHealthy ? 'Connected' : health.database || 'Unknown'}
+            icon={Database}
+            color={dbHealthy ? 'emerald' : 'amber'}
+          />
+          <StatusBadge
+            label="AI Service"
+            value={aiHealthy ? 'Operational' : aiStatus.circuitBreaker === 'OPEN' ? 'Circuit Open' : 'Degraded'}
+            icon={Brain}
+            color={aiHealthy ? 'purple' : 'amber'}
+          />
+          {aiStatus.failureCount > 0 && (
+            <StatusBadge
+              label="AI Failures"
+              value={`${aiStatus.failureCount} / ${aiStatus.failureThreshold || 5}`}
+              icon={AlertTriangle}
+              color="amber"
+            />
+          )}
+        </motion.div>
+      )}
 
       {/* Metric Cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -301,7 +311,7 @@ export default function Dashboard() {
           <div className="py-8 text-center text-zinc-600 italic">No decisions yet — submit an event from the Simulator.</div>
         ) : (
           <div className="space-y-2">
-            {metrics.recent.map((entry: any) => {
+            {metrics.recent.slice(0, 3).map((entry: any) => {
               const ev = entry.notification_events;
               return (
                 <div key={entry.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/5 transition-colors">
@@ -402,6 +412,27 @@ function StatusBadge({ label, value, icon: Icon, color }: any) {
       <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       <span className="opacity-60">{label}:</span>
       <span>{value}</span>
+    </div>
+  );
+}
+
+function Loader() {
+  return (
+    <div className="loading">
+      {/* Three concentric spinning rings */}
+      <div className="loading__rings">
+        <div className="loading__ring" />
+        <div className="loading__ring" />
+        <div className="loading__ring" />
+      </div>
+      {/* Pulsing accent dots */}
+      <div className="loading__dots">
+        <div className="loading__dot" />
+        <div className="loading__dot" />
+        <div className="loading__dot" />
+      </div>
+      {/* Animated status text */}
+      <span className="loading__text">Connecting to systems…</span>
     </div>
   );
 }

@@ -1,50 +1,89 @@
-# Next Supabase Engine - Backend
+# Cyepro AI — Backend Service
 
-This is the backend service for the Next Supabase Engine project. It is built with **Node.js, Express, and TypeScript** and designed to handle API requests, user authentication, and integrations with different AI services.
+Built with **Node.js · Express · TypeScript · Supabase · Groq (Llama-3.3-70b-versatile)**
 
-## Features
+## API Endpoints
 
-- **Express.js API server**: Fast and minimalist web framework for Node.js.
-- **TypeScript**: Typed superset of JavaScript for better maintainability and error tracking.
-- **Authentication**: JWT & `bcryptjs` based user authentication.
-- **Supabase Integration**: Data handling using `@supabase/supabase-js`.
-- **AI Integrations**: Built-in support for multiple AI providers:
-  - OpenAI (`openai`)
-  - Google Generative AI (`@google/generative-ai`)
-  - Groq (`groq-sdk`)
+### Auth
+| Method | Route | Access | Description |
+|--------|-------|--------|-------------|
+| POST | `/api/login` | Public | JWT login |
+| POST | `/api/signup` | Public | Account creation |
 
-## Prerequisites
+### Notifications
+| Method | Route | Access | Description |
+|--------|-------|--------|-------------|
+| POST | `/api/notifications` | Auth | Submit event — `202 Accepted` async |
+| GET | `/api/metrics` | Auth | Dashboard totals + recent activity |
+| GET | `/api/metrics/timeline` | Auth | 24h hourly NOW/LATER/NEVER buckets |
 
-- **Node.js** (v18+)
-- **npm** or **yarn**
+### Audit
+| Method | Route | Access | Description |
+|--------|-------|--------|-------------|
+| GET | `/api/audit` | Auth | Paginated audit log (append-only) |
+
+### Rules
+| Method | Route | Access | Description |
+|--------|-------|--------|-------------|
+| GET | `/api/rules` | Auth | All active rules (always returns array) |
+| POST | `/api/rules` | Admin | Create rule |
+| PUT | `/api/rules/:id` | Admin | Update rule |
+| DELETE | `/api/rules/:id` | Admin | Soft-delete (`is_active = false`) |
+
+### Deferred Queue
+| Method | Route | Access | Description |
+|--------|-------|--------|-------------|
+| GET | `/api/deferred-queue` | Auth | Queue with filter/search/pagination |
+| POST | `/api/deferred-queue/:id/force-send` | Admin | Force-send WAITING/FAILED item |
+
+### Health
+| Method | Route | Access | Description |
+|--------|-------|--------|-------------|
+| GET | `/health` | Public | DB + AI circuit breaker status |
+
+## Decision Pipeline
+
+```
+POST /api/notifications
+      │
+      ├─ 1. Expiry check (expires_at in the past → NEVER)
+      ├─ 2. Exact dedup (dedupe_key match → NEVER)
+      ├─ 3. Near-dedup (pg_trgm similarity > 0.8 → NEVER)
+      ├─ 4. Rule engine (priority_order DESC, first match wins)
+      ├─ 5. Alert fatigue (per-user NOW count in 60-min window)
+      ├─ 6. Groq AI  ──► fallback to Gemini ──► safe LATER
+      └─ 7. Audit log + deferred queue (if LATER)
+```
 
 ## Environment Variables
-
-To run this backend, you will need to add the following environment variables. Copy the `.env.example` file to `.env` and fill in the required values.
 
 ```bash
 cp .env.example .env
 ```
 
-## Available Scripts
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SUPABASE_URL` | ✅ | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Service role key (bypasses RLS) |
+| `GROQ_API_KEY` | ✅ | Groq Cloud API key |
+| `MODEL_NAME` | ✅ | e.g. `llama-3.3-70b-versatile` |
+| `GEMINI_API_KEY` | Optional | Fallback LLM key |
+| `JWT_SECRET` | ✅ | Token signing secret |
+| `PORT` | Optional | Default `5000` |
 
-In the project directory, you can run:
+## Scripts
 
-### `npm run dev`
-Runs the app in the development mode using `nodemon` and `ts-node`.
-The server will reload if you make edits.
+```bash
+npm run dev      # ts-node + nodemon (port 5000)
+npm run build    # compile to dist/
+npm start        # run dist/index.js
+```
 
-### `npm run build`
-Compiles the TypeScript code to JavaScript into the `dist` folder.
+## Resilience
 
-### `npm start`
-Starts the compiled Node.js application from the `dist` folder. Make sure you have run `npm run build` before using this command.
-
-## Core Packages
-
-- `express` & `cors` - Web framework and cross-origin resource sharing.
-- `dotenv` - Environment variable management.
-- `@supabase/supabase-js` - Supabase client.
-- `openai`, `@google/generative-ai`, `groq-sdk` - AI SDK integrations.
-- `jsonwebtoken`, `bcryptjs` - Authentication handling.
-- `axios` - Promise based HTTP client.
+- **Circuit Breaker**: 5 AI failures → OPEN for 5 min → auto-reset
+- **Hard Timeout**: 3s per LLM call
+- **Retry**: 2 retries with 500ms / 1000ms backoff before fallback
+- **Fallback**: Always produces `LATER` + `is_fallback: true` — zero data loss
+- **Soft Deletes**: Rules set `is_active = false`, never hard-deleted
+- **`getRules` null-safety**: Always returns `[]` on error (never `null`)
