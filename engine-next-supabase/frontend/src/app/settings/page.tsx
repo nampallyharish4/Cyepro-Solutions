@@ -95,7 +95,7 @@ export default function IntelligenceSettings() {
           <div className="h-10 w-10 rounded-2xl bg-zinc-950 border border-white/5 flex items-center justify-center text-zinc-500">
             <Settings className="h-6 w-6" />
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter uppercase">Intelligence Tuning</h1>
+        <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tighter uppercase">Intelligence Tuning</h1>
         </div>
         <p className="text-zinc-500 font-medium max-w-2xl">Modify global cognitive parameters in real-time. Changes are applied instantly to the decision pipeline without restart.</p>
       </div>
@@ -180,9 +180,9 @@ export default function IntelligenceSettings() {
       </div>
 
       {/* Advanced Footer */}
-      <div className="glass-card p-6 border-l-4 border-l-purple-600 flex items-center justify-between">
+      <div className="glass-card p-5 sm:p-6 border-l-4 border-l-purple-600 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
          <div className="flex gap-4 items-center">
-            <div className="h-10 w-10 flex items-center justify-center rounded-full bg-purple-600/10 text-purple-400">
+            <div className="h-10 w-10 flex items-center justify-center rounded-full bg-purple-600/10 text-purple-400 shrink-0">
                <Database className="h-5 w-5" />
             </div>
             <div>
@@ -190,7 +190,7 @@ export default function IntelligenceSettings() {
                <p className="text-xs text-zinc-500 font-medium">All settings are versioned in the primary database.</p>
             </div>
          </div>
-         <div className="flex items-center gap-2">
+         <div className="flex items-center gap-2 pl-14 sm:pl-0">
             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">System Synced</span>
          </div>

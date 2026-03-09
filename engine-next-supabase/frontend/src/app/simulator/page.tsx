@@ -182,7 +182,7 @@ export default function Simulator() {
         {toast && (
           <motion.div 
             initial={{ opacity: 0, y: -20, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-            className={`fixed top-8 right-8 z-[1000] px-6 py-4 rounded-2xl border backdrop-blur-3xl shadow-2xl flex items-center gap-3 ${toast.type === 'ok' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}
+            className={`fixed top-20 right-4 sm:top-8 sm:right-8 z-[1000] px-4 sm:px-6 py-3 sm:py-4 rounded-2xl border backdrop-blur-3xl shadow-2xl flex items-center gap-3 ${toast.type === 'ok' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}
           >
             {toast.type === 'ok' ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
             <span className="text-sm font-black uppercase tracking-widest">{toast.msg}</span>
@@ -195,7 +195,7 @@ export default function Simulator() {
            <div className="h-12 w-12 rounded-2xl bg-purple-600/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-[0_0_20px_rgba(147,51,234,0.1)]">
               <Rocket className="h-6 w-6" />
            </div>
-           <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tighter uppercase underline decoration-purple-600/30 underline-offset-8">
+           <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tighter uppercase underline decoration-purple-600/30 underline-offset-8">
               System Simulator
            </h1>
         </div>
@@ -306,7 +306,7 @@ export default function Simulator() {
                         </div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600 mb-1">Pipeline Consensus</p>
-                          <h4 className="text-4xl font-black text-white uppercase">{result.decision || result.status}</h4>
+                           <h4 className="text-2xl sm:text-4xl font-black text-white uppercase">{result.decision || result.status}</h4>
                         </div>
                     </div>
                     <ForensicRow label="Global Event ID" value={result.event_id} />

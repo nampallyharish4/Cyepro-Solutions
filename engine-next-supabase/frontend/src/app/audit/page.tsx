@@ -94,7 +94,7 @@ export default function AuditArchive() {
           <div className="h-10 w-10 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
             <Activity className="h-6 w-6" />
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tight uppercase underline decoration-purple-600/30 underline-offset-8">
+          <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight uppercase underline decoration-purple-600/30 underline-offset-8">
             Audit Archive
           </h1>
         </div>
@@ -287,17 +287,17 @@ function ExplainModal({ log, onClose }: { log: any; onClose: () => void }) {
         initial={{ opacity: 0, scale: 0.9, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 30 }}
-        className="relative w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-[40px] border border-white/10 bg-[#0c0c0e] shadow-[0_0_100px_rgba(168,85,247,0.15)] flex flex-col"
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-[28px] sm:rounded-[40px] border border-white/10 bg-[#0c0c0e] shadow-[0_0_100px_rgba(168,85,247,0.15)] flex flex-col"
       >
         <button onClick={onClose} className="absolute right-8 top-8 z-10 p-2 text-zinc-600 hover:text-white transition-all"><X className="h-6 w-6" /></button>
-        <div className="p-10 md:p-14 overflow-y-auto custom-scrollbar">
-          <div className="flex flex-col items-center text-center gap-6 mb-12">
-             <div className="h-20 w-20 rounded-[30px] bg-purple-600 flex items-center justify-center shadow-2xl shadow-purple-600/30">
-                <Brain className="h-10 w-10 text-white" />
+          <div className="p-6 sm:p-10 md:p-14 overflow-y-auto custom-scrollbar">
+          <div className="flex flex-col items-center text-center gap-4 sm:gap-6 mb-8 sm:mb-12">
+             <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-[20px] sm:rounded-[30px] bg-purple-600 flex items-center justify-center shadow-2xl shadow-purple-600/30">
+                <Brain className="h-7 w-7 sm:h-10 sm:w-10 text-white" />
              </div>
              <div className="space-y-1">
-                <h2 className="text-3xl font-black text-white tracking-tight uppercase underline decoration-purple-600/40">Trace Logic Flow</h2>
-                <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">Cognitive Debugging for Event #{log.id.slice(0,8)}</p>
+                <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight uppercase underline decoration-purple-600/40">Trace Logic Flow</h2>
+                <p className="text-zinc-600 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.3em]">Cognitive Debugging for Event #{log.id.slice(0,8)}</p>
              </div>
           </div>
 

@@ -220,7 +220,7 @@ export default function RulesManager() {
   return (
     <div className="space-y-8 sm:space-y-12">
       {/* Toast Notifications */}
-      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
+      <div className="fixed top-16 right-4 z-50 flex flex-col gap-2 max-w-[calc(100vw-2rem)]">
         {toasts.map((t) => (
           <div
             key={t.id}
@@ -243,7 +243,7 @@ export default function RulesManager() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl sm:text-4xl font-bold text-white tracking-tight">
             Rules Protocol
           </h1>
           <p className="text-sm sm:text-lg text-zinc-400">

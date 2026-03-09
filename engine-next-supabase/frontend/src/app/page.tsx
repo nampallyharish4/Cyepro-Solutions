@@ -110,11 +110,11 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col gap-2"
       >
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white uppercase underline decoration-purple-600/30 underline-offset-8">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white uppercase underline decoration-purple-600/30 underline-offset-8">
           Engine Command
         </h1>
-        <p className="text-base sm:text-lg text-zinc-500 font-medium">
-          Strategic overview of system intelligence & cognitive performance.
+        <p className="text-sm sm:text-lg text-zinc-500 font-medium">
+          Strategic overview of system intelligence &amp; cognitive performance.
         </p>
       </motion.div>
 
@@ -123,7 +123,7 @@ export default function Dashboard() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="flex flex-wrap items-center gap-3"
+        className="flex flex-wrap items-center gap-2 sm:gap-3"
       >
         <StatusBadge
           label="System"
@@ -340,21 +340,21 @@ export default function Dashboard() {
 
         <div className="space-y-2">
           {metrics.recent.slice(0, 3).map((entry: any) => (
-            <div key={entry.id} className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] hover:bg-white/5 transition-all border border-transparent hover:border-white/5 group">
+            <div key={entry.id} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-white/[0.02] hover:bg-white/5 transition-all border border-transparent hover:border-white/5 group">
               <div className="shrink-0">
                 <div className={`h-2.5 w-2.5 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] ${DecisionDotColor(entry.decision)}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white font-black uppercase truncate group-hover:text-purple-400 transition-colors">
+                <p className="text-xs sm:text-sm text-white font-black uppercase truncate group-hover:text-purple-400 transition-colors">
                   {entry.notification_events?.title || 'Packet Overload'}
                 </p>
-                <p className="text-[11px] text-zinc-600 font-medium truncate mt-0.5">&ldquo;{entry.reason}&rdquo;</p>
+                <p className="text-[10px] sm:text-[11px] text-zinc-600 font-medium truncate mt-0.5">&ldquo;{entry.reason}&rdquo;</p>
               </div>
               <div className="flex flex-col items-end gap-0.5 shrink-0">
                 <span className={`text-[10px] font-black uppercase tracking-widest ${decisionTextColor(entry.decision)}`}>
                   {entry.decision}
                 </span>
-                <span className="text-[10px] text-zinc-700 font-bold uppercase">
+                <span className="text-[10px] text-zinc-700 font-bold uppercase hidden sm:block">
                   {formatDistanceToNow(new Date(entry.processed_at), { addSuffix: true })}
                 </span>
               </div>

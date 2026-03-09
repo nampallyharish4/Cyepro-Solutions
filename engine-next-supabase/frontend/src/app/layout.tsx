@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { LayoutContent } from '@/components/LayoutContent';
@@ -12,6 +12,13 @@ export const metadata: Metadata = {
     'Intelligent Notification Management System with Fail-Safe Architecture',
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#09090b',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -19,7 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark`} suppressHydrationWarning>
-      <body className="flex min-h-screen flex-col overflow-x-hidden md:flex-row md:overflow-hidden" suppressHydrationWarning>
+      <body className="flex min-h-screen flex-col overflow-x-hidden md:flex-row md:overflow-hidden antialiased" suppressHydrationWarning>
         <LayoutContent>{children}</LayoutContent>
       </body>
     </html>
