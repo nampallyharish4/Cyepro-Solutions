@@ -5,41 +5,47 @@ Built with **Node.js · Express · TypeScript · Supabase · Groq (Llama-3.3-70b
 ## API Endpoints
 
 ### Auth
-| Method | Route | Access | Description |
-|--------|-------|--------|-------------|
-| POST | `/api/login` | Public | JWT login |
-| POST | `/api/signup` | Public | Account creation |
+
+| Method | Route         | Access | Description      |
+| ------ | ------------- | ------ | ---------------- |
+| POST   | `/api/login`  | Public | JWT login        |
+| POST   | `/api/signup` | Public | Account creation |
 
 ### Notifications
-| Method | Route | Access | Description |
-|--------|-------|--------|-------------|
-| POST | `/api/notifications` | Auth | Submit event — `202 Accepted` async |
-| GET | `/api/metrics` | Auth | Dashboard totals + recent activity |
-| GET | `/api/metrics/timeline` | Auth | 24h hourly NOW/LATER/NEVER buckets |
+
+| Method | Route                   | Access | Description                         |
+| ------ | ----------------------- | ------ | ----------------------------------- |
+| POST   | `/api/notifications`    | Auth   | Submit event — `202 Accepted` async |
+| GET    | `/api/metrics`          | Auth   | Dashboard totals + recent activity  |
+| GET    | `/api/metrics/timeline` | Auth   | 24h hourly NOW/LATER/NEVER buckets  |
 
 ### Audit
-| Method | Route | Access | Description |
-|--------|-------|--------|-------------|
-| GET | `/api/audit` | Auth | Paginated audit log (append-only) |
+
+| Method | Route        | Access | Description                       |
+| ------ | ------------ | ------ | --------------------------------- |
+| GET    | `/api/audit` | Auth   | Paginated audit log (append-only) |
 
 ### Rules
-| Method | Route | Access | Description |
-|--------|-------|--------|-------------|
-| GET | `/api/rules` | Auth | All active rules (always returns array) |
-| POST | `/api/rules` | Admin | Create rule |
-| PUT | `/api/rules/:id` | Admin | Update rule |
-| DELETE | `/api/rules/:id` | Admin | Soft-delete (`is_active = false`) |
+
+| Method | Route            | Access | Description                             |
+| ------ | ---------------- | ------ | --------------------------------------- |
+| GET    | `/api/rules`     | Auth   | All active rules (always returns array) |
+| POST   | `/api/rules`     | Admin  | Create rule                             |
+| PUT    | `/api/rules/:id` | Admin  | Update rule                             |
+| DELETE | `/api/rules/:id` | Admin  | Soft-delete (`is_active = false`)       |
 
 ### Deferred Queue
-| Method | Route | Access | Description |
-|--------|-------|--------|-------------|
-| GET | `/api/deferred-queue` | Auth | Queue with filter/search/pagination |
-| POST | `/api/deferred-queue/:id/force-send` | Admin | Force-send WAITING/FAILED item |
+
+| Method | Route                                | Access | Description                         |
+| ------ | ------------------------------------ | ------ | ----------------------------------- |
+| GET    | `/api/deferred-queue`                | Auth   | Queue with filter/search/pagination |
+| POST   | `/api/deferred-queue/:id/force-send` | Admin  | Force-send WAITING/FAILED item      |
 
 ### Health
-| Method | Route | Access | Description |
-|--------|-------|--------|-------------|
-| GET | `/health` | Public | DB + AI circuit breaker status |
+
+| Method | Route     | Access | Description                    |
+| ------ | --------- | ------ | ------------------------------ |
+| GET    | `/health` | Public | DB + AI circuit breaker status |
 
 ## Decision Pipeline
 
@@ -61,15 +67,17 @@ POST /api/notifications
 cp .env.example .env
 ```
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SUPABASE_URL` | ✅ | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Service role key (bypasses RLS) |
-| `GROQ_API_KEY` | ✅ | Groq Cloud API key |
-| `MODEL_NAME` | ✅ | e.g. `llama-3.3-70b-versatile` |
-| `GEMINI_API_KEY` | Optional | Fallback LLM key |
-| `JWT_SECRET` | ✅ | Token signing secret |
-| `PORT` | Optional | Default `5000` |
+| Variable                    | Required | Description                                |
+| --------------------------- | -------- | ------------------------------------------ |
+| `SUPABASE_URL`              | ✅       | Supabase project URL                       |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅       | Service role key (bypasses RLS)            |
+| `GROQ_API_KEY`              | ✅       | Groq Cloud API key                         |
+| `MODEL_NAME`                | ✅       | e.g. `llama-3.3-70b-versatile`             |
+| `GEMINI_API_KEY`            | Optional | Fallback LLM key                           |
+| `JWT_SECRET`                | ✅       | Token signing secret                       |
+| `PORT`                      | Optional | Default `5000`                             |
+| `FRONTEND_URL`              | Optional | Primary frontend origin for CORS allowlist |
+| `CORS_ALLOWED_ORIGINS`      | Optional | Comma-separated additional CORS origins    |
 
 ## Scripts
 

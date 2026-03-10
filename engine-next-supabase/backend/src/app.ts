@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config(); // Must be first — loads env vars before any other module reads them
 
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -20,7 +20,12 @@ const port = process.env.PORT || 5000;
 
 // Global error handlers to prevent silent pipeline failures
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('CRITICAL: Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error(
+    'CRITICAL: Unhandled Rejection at:',
+    promise,
+    'reason:',
+    reason,
+  );
 });
 
 process.on('uncaughtException', (error) => {
@@ -33,11 +38,37 @@ app.use(helmet());
 // 2. Structured Request Logging (Production style)
 app.use(morgan('short'));
 
-// 3. CORS Configuration (Strict in Prod)
-const isProd = process.env.NODE_ENV === 'production';
+// 3. CORS Configuration (Allowlist-based in all environments)
+const configuredOrigins = [
+  process.env.FRONTEND_URL,
+  ...(process.env.CORS_ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean),
+];
+
+const devOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+
+const allowedOrigins = new Set(
+  [...configuredOrigins, ...devOrigins, 'https://cyepro-solutions.vercel.app']
+    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+    .map((v) => v.trim()),
+);
+
 app.use(
   cors({
-    origin: isProd ? (process.env.FRONTEND_URL || 'https://cyepro-solutions.vercel.app') : true,
+    origin: (origin, callback) => {
+      // Allow non-browser requests (curl/Postman) and allowlisted browser origins.
+      if (!origin || allowedOrigins.has(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
   }),
 );
@@ -53,7 +84,19 @@ const apiLimiter = rateLimit({
 app.use('/api', apiLimiter);
 
 // 5. Body Parsing
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+
+// Return safe client error for malformed JSON instead of framework HTML + stack traces.
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (
+    err instanceof SyntaxError &&
+    (err as any).status === 400 &&
+    'body' in (err as any)
+  ) {
+    return res.status(400).json({ error: 'Invalid JSON payload.' });
+  }
+  next(err);
+});
 
 // Start the background jobs
 SchedulerService.start();
@@ -100,6 +143,12 @@ app.use('/api', authRoutes);
 app.use('/api', notificationRoutes);
 app.use('/api/rules', ruleRoutes);
 app.use('/api/deferred-queue', deferredQueueRoutes);
+
+// Final fallback: never leak internal error details to clients.
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  console.error('Unhandled request error:', err);
+  return res.status(500).json({ error: 'Internal Server Error.' });
+});
 
 app.listen(port, () => {
   console.log(`Notification Engine (Next+Supabase) running on port ${port}`);
