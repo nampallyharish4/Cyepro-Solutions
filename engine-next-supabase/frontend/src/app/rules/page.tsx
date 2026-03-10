@@ -31,7 +31,6 @@ export default function RulesManager() {
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [fatigueLimit, setFatigueLimit] = useState(5);
-  const [fatigueRuleId, setFatigueRuleId] = useState<string | null>(null);
   const [isUpdatingFatigue, setIsUpdatingFatigue] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
@@ -69,13 +68,22 @@ export default function RulesManager() {
 
   const fetchRules = async () => {
     try {
-      const { data } = await api.get('/rules');
-      const list: any[] = Array.isArray(data) ? data : [];
-      const fatigueRule = list.find((r: any) => r.name === 'FATIGUE_LIMIT');
-      if (fatigueRule) {
-        setFatigueLimit(parseInt(fatigueRule.condition_value) || 5);
-        setFatigueRuleId(fatigueRule.id);
+      const [rulesRes, settingsRes] = await Promise.all([
+        api.get('/rules'),
+        api.get('/settings'),
+      ]);
+
+      const list: any[] = Array.isArray(rulesRes.data) ? rulesRes.data : [];
+      const settings: any[] = Array.isArray(settingsRes.data)
+        ? settingsRes.data
+        : [];
+      const fatigueSetting = settings.find(
+        (s: any) => s.key === 'FATIGUE_LIMIT',
+      );
+      if (fatigueSetting?.value) {
+        setFatigueLimit(parseInt(fatigueSetting.value, 10) || 5);
       }
+
       setRules(list.filter((r: any) => r.condition_type !== 'system_setting'));
       setApiError(null);
     } catch (e: any) {
@@ -139,28 +147,21 @@ export default function RulesManager() {
     }
     setIsUpdatingFatigue(true);
     try {
-      if (fatigueRuleId) {
-        // UPDATE existing fatigue rule — not INSERT duplicate
-        await api.put(`/rules/${fatigueRuleId}`, {
-          condition_value: fatigueLimit.toString(),
-        });
-      } else {
-        // First time — create it
-        await api.post('/rules', {
-          name: 'FATIGUE_LIMIT',
-          condition_type: 'system_setting',
-          condition_value: fatigueLimit.toString(),
-          target_priority: 'SYSTEM',
-          priority_order: -1,
-        });
-      }
+      await api.post('/settings', {
+        key: 'FATIGUE_LIMIT',
+        value: fatigueLimit.toString(),
+        description: 'Max NOW notifications per user in rolling 60 minutes',
+      });
       showToast(
         'Fatigue threshold updated globally — no restart required.',
         'success',
       );
       fetchRules();
-    } catch {
-      showToast('Failed to update fatigue threshold.', 'error');
+    } catch (e: any) {
+      showToast(
+        e?.response?.data?.error || 'Failed to update fatigue threshold.',
+        'error',
+      );
     } finally {
       setIsUpdatingFatigue(false);
     }
