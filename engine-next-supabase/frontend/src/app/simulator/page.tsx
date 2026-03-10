@@ -25,6 +25,7 @@ import api from '@/lib/api';
 import { formatDistanceToNow } from 'date-fns';
 
 const CHANNELS = ['PUSH', 'EMAIL', 'SMS', 'IN_APP', 'WEBHOOK'];
+const FINAL_DECISIONS = new Set(['NOW', 'LATER', 'NEVER']);
 
 interface SubmissionResult {
   id: string;
@@ -74,6 +75,33 @@ export default function Simulator() {
 
   const generateDedupeKey = () =>
     `pkt_${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+  const sleep = (ms: number) =>
+    new Promise((resolve) => setTimeout(resolve, ms));
+
+  const waitForFinalDecision = async (eventId: string) => {
+    for (let i = 0; i < 12; i++) {
+      await sleep(1000);
+      try {
+        const { data } = await api.get(`/notifications/${eventId}`);
+        const decision = String(
+          data?.decision || data?.status || '',
+        ).toUpperCase();
+        if (FINAL_DECISIONS.has(decision)) {
+          return data;
+        }
+      } catch {
+        // Best-effort polling; continue until timeout.
+      }
+    }
+
+    return {
+      event_id: eventId,
+      status: 'PENDING',
+      decision: 'PENDING',
+      reason: 'Classification is still processing. Please check again shortly.',
+    };
+  };
 
   useEffect(() => {
     setForm((prev) => ({ ...prev, dedupe_key: generateDedupeKey() }));
@@ -133,16 +161,26 @@ export default function Simulator() {
       }
 
       const { data } = await api.post('/notifications', payload);
+      const initialDecision = String(
+        data?.decision || data?.status || '',
+      ).toUpperCase();
+      const resolvedData = FINAL_DECISIONS.has(initialDecision)
+        ? data
+        : await waitForFinalDecision(data.event_id);
+
       const final: SubmissionResult = {
-        ...data,
-        id: data.event_id,
-        event_id: data.event_id,
+        ...resolvedData,
+        id: resolvedData.event_id,
+        event_id: resolvedData.event_id,
         _submitted_at: Date.now(),
         _form: { ...form },
       };
       setResult(final);
       setHistory((prev: any) => [final, ...prev].slice(0, 10));
-      showToast(`Decision: ${data.decision}`, 'ok');
+      showToast(
+        `Decision: ${final.decision || final.status || 'PENDING'}`,
+        'ok',
+      );
 
       setForm((prev: any) => ({
         ...prev,
@@ -548,7 +586,9 @@ function DecisionDotColor(d?: string) {
     ? 'bg-emerald-500'
     : d === 'LATER'
       ? 'bg-amber-500'
-      : 'bg-rose-500';
+      : d === 'PENDING' || d === 'PROCESSING'
+        ? 'bg-indigo-500'
+        : 'bg-rose-500';
 }
 
 function decisionColor(d?: string) {
@@ -556,7 +596,9 @@ function decisionColor(d?: string) {
     ? 'text-emerald-400'
     : d === 'LATER'
       ? 'text-amber-400'
-      : 'text-rose-400';
+      : d === 'PENDING' || d === 'PROCESSING'
+        ? 'text-indigo-400'
+        : 'text-rose-400';
 }
 
 function getDecisionColor(d?: string) {

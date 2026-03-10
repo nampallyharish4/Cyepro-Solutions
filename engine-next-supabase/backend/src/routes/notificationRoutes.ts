@@ -9,6 +9,11 @@ router.post(
   authMiddleware,
   NotificationController.submitEvent,
 );
+router.get(
+  '/notifications/:id',
+  authMiddleware,
+  NotificationController.getEventStatus,
+);
 router.get('/metrics', authMiddleware, NotificationController.getMetrics);
 router.get(
   '/metrics/timeline',
@@ -18,7 +23,16 @@ router.get(
 router.get('/audit', authMiddleware, NotificationController.getAuditLogs);
 router.get('/analytics', authMiddleware, NotificationController.getAnalytics);
 router.get('/settings', authMiddleware, NotificationController.getSettings);
-router.post('/settings', authMiddleware, adminOnly, NotificationController.updateSettings);
-router.post('/rules/dry-run', authMiddleware, NotificationController.dryRunRule);
+router.post(
+  '/settings',
+  authMiddleware,
+  adminOnly,
+  NotificationController.updateSettings,
+);
+router.post(
+  '/rules/dry-run',
+  authMiddleware,
+  NotificationController.dryRunRule,
+);
 
 export default router;

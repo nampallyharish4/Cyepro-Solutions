@@ -24,7 +24,10 @@ export class NotificationController {
       return res.status(200).json({
         message: 'Event processed',
         event_id: result.id,
-        decision: result.audit?.decision || 'UNKNOWN',
+        status: result.audit?.decision
+          ? 'COMPLETED'
+          : result.status || 'PENDING',
+        decision: result.audit?.decision || result.status || 'PENDING',
         reason: result.audit?.reason || '',
         ai_used: result.audit?.ai_used || false,
         ai_model: result.audit?.ai_model || null,
@@ -36,6 +39,54 @@ export class NotificationController {
     } catch (error) {
       console.error('Submit Error:', error);
       return res.status(500).json({ error: 'Internal Server Error' });
+    }
+  }
+
+  /**
+   * Get latest decision/status for a single event
+   */
+  static async getEventStatus(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const { data: event, error: eventError } = await supabase
+        .from('notification_events')
+        .select('id, status, created_at')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (eventError) throw eventError;
+      if (!event) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+
+      const { data: audit, error: auditError } = await supabase
+        .from('audit_logs')
+        .select(
+          'decision, reason, ai_used, ai_model, ai_confidence, is_fallback, rule_id, processed_at',
+        )
+        .eq('event_id', id)
+        .order('processed_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (auditError) throw auditError;
+
+      return res.status(200).json({
+        event_id: event.id,
+        status: audit?.decision ? 'COMPLETED' : event.status || 'PENDING',
+        decision: audit?.decision || event.status || 'PENDING',
+        reason: audit?.reason || '',
+        ai_used: audit?.ai_used || false,
+        ai_model: audit?.ai_model || null,
+        ai_confidence: audit?.ai_confidence || null,
+        is_fallback: audit?.is_fallback || false,
+        rule_id: audit?.rule_id || null,
+        processed_at: audit?.processed_at || null,
+      });
+    } catch (error) {
+      console.error('Get Event Status Error:', error);
+      return res.status(500).json({ error: 'Failed to fetch event status' });
     }
   }
 
@@ -199,12 +250,9 @@ export class NotificationController {
         req.body;
 
       if (!name || !condition_type || !condition_value || !target_priority) {
-        return res
-          .status(400)
-          .json({
-            error:
-              'Validation Exception: Missing required protocol parameters.',
-          });
+        return res.status(400).json({
+          error: 'Validation Exception: Missing required protocol parameters.',
+        });
       }
 
       const { data, error } = await supabase
@@ -217,12 +265,10 @@ export class NotificationController {
       return res.status(201).json(data);
     } catch (e: any) {
       console.error('Create Rule Exception:', e);
-      return res
-        .status(500)
-        .json({
-          error: 'Failed to create tracking protocol.',
-          details: e.message,
-        });
+      return res.status(500).json({
+        error: 'Failed to create tracking protocol.',
+        details: e.message,
+      });
     }
   }
 
@@ -252,12 +298,10 @@ export class NotificationController {
       return res.json(data);
     } catch (e: any) {
       console.error('Update Rule Exception:', e);
-      return res
-        .status(500)
-        .json({
-          error: 'Failed to update protocol logic.',
-          details: e.message,
-        });
+      return res.status(500).json({
+        error: 'Failed to update protocol logic.',
+        details: e.message,
+      });
     }
   }
 
@@ -280,12 +324,10 @@ export class NotificationController {
       return res.json(data);
     } catch (e: any) {
       console.error('Delete Rule Exception:', e);
-      return res
-        .status(500)
-        .json({
-          error: 'Failed to safely archive protocol.',
-          details: e.message,
-        });
+      return res.status(500).json({
+        error: 'Failed to safely archive protocol.',
+        details: e.message,
+      });
     }
   }
 
