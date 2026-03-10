@@ -5,25 +5,33 @@ import { DecisionEngine } from '../services/DecisionEngine';
 export class NotificationController {
   /**
    * Submit an event
-   * Requirement: Return immediately, process async.
+   * Processes synchronously and returns the decision instantly.
    */
   static async submitEvent(req: Request, res: Response) {
     try {
       const eventData = req.body;
-      
+
       // Strict input validation to prevent engine crashes
       if (!eventData.user_id || !eventData.event_type || !eventData.title) {
-        return res.status(400).json({ 
-          error: 'Validation Exception: Missing required fields (user_id, event_type, title)' 
+        return res.status(400).json({
+          error:
+            'Validation Exception: Missing required fields (user_id, event_type, title)',
         });
       }
 
       const result = await DecisionEngine.processEvent(eventData);
 
-      return res.status(202).json({
-        message: 'Event accepted for processing',
+      return res.status(200).json({
+        message: 'Event processed',
         event_id: result.id,
-        status: 'PENDING',
+        decision: result.audit?.decision || 'UNKNOWN',
+        reason: result.audit?.reason || '',
+        ai_used: result.audit?.ai_used || false,
+        ai_model: result.audit?.ai_model || null,
+        ai_confidence: result.audit?.ai_confidence || null,
+        is_fallback: result.audit?.is_fallback || false,
+        rule_id: result.audit?.rule_id || null,
+        processed_at: result.audit?.processed_at || null,
       });
     } catch (error) {
       console.error('Submit Error:', error);
@@ -78,7 +86,9 @@ export class NotificationController {
       // Recent decisions (last 10)
       const { data: recent } = await supabase
         .from('audit_logs')
-        .select('id, event_id, decision, reason, ai_model, is_fallback, processed_at, notification_events(title, source, user_id)')
+        .select(
+          'id, event_id, decision, reason, ai_model, is_fallback, processed_at, notification_events(title, source, user_id)',
+        )
         .order('processed_at', { ascending: false })
         .limit(10);
 
@@ -185,10 +195,16 @@ export class NotificationController {
    */
   static async createRule(req: Request, res: Response) {
     try {
-      const { name, condition_type, condition_value, target_priority } = req.body;
-      
+      const { name, condition_type, condition_value, target_priority } =
+        req.body;
+
       if (!name || !condition_type || !condition_value || !target_priority) {
-         return res.status(400).json({ error: 'Validation Exception: Missing required protocol parameters.' });
+        return res
+          .status(400)
+          .json({
+            error:
+              'Validation Exception: Missing required protocol parameters.',
+          });
       }
 
       const { data, error } = await supabase
@@ -196,12 +212,17 @@ export class NotificationController {
         .insert([req.body])
         .select()
         .single();
-        
+
       if (error) throw error;
       return res.status(201).json(data);
     } catch (e: any) {
       console.error('Create Rule Exception:', e);
-      return res.status(500).json({ error: 'Failed to create tracking protocol.', details: e.message });
+      return res
+        .status(500)
+        .json({
+          error: 'Failed to create tracking protocol.',
+          details: e.message,
+        });
     }
   }
 
@@ -223,12 +244,20 @@ export class NotificationController {
         .single();
 
       if (error) throw error;
-      if (!data) return res.status(404).json({ error: 'Rule not found or already deleted.' });
-      
+      if (!data)
+        return res
+          .status(404)
+          .json({ error: 'Rule not found or already deleted.' });
+
       return res.json(data);
     } catch (e: any) {
       console.error('Update Rule Exception:', e);
-      return res.status(500).json({ error: 'Failed to update protocol logic.', details: e.message });
+      return res
+        .status(500)
+        .json({
+          error: 'Failed to update protocol logic.',
+          details: e.message,
+        });
     }
   }
 
@@ -247,11 +276,16 @@ export class NotificationController {
 
       if (error) throw error;
       if (!data) return res.status(404).json({ error: 'Rule not found.' });
-      
+
       return res.json(data);
     } catch (e: any) {
       console.error('Delete Rule Exception:', e);
-      return res.status(500).json({ error: 'Failed to safely archive protocol.', details: e.message });
+      return res
+        .status(500)
+        .json({
+          error: 'Failed to safely archive protocol.',
+          details: e.message,
+        });
     }
   }
 
@@ -261,7 +295,10 @@ export class NotificationController {
   static async getDeferredQueue(req: Request, res: Response) {
     try {
       const page = Math.max(1, parseInt(req.query.page as string) || 1);
-      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 30));
+      const limit = Math.min(
+        100,
+        Math.max(1, parseInt(req.query.limit as string) || 30),
+      );
       const status = req.query.status as string;
       const search = req.query.search as string;
       const from = (page - 1) * limit;
@@ -277,7 +314,7 @@ export class NotificationController {
 
       if (search) {
         query = query.or(
-          `notification_events.title.ilike.%${search}%,notification_events.source.ilike.%${search}%,notification_events.event_type.ilike.%${search}%,notification_events.user_id.ilike.%${search}%`
+          `notification_events.title.ilike.%${search}%,notification_events.source.ilike.%${search}%,notification_events.event_type.ilike.%${search}%,notification_events.user_id.ilike.%${search}%`,
         );
       }
 
@@ -345,15 +382,21 @@ export class NotificationController {
         .from('audit_logs')
         .select('ai_confidence, is_fallback')
         .eq('ai_used', true)
-        .gte('processed_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+        .gte(
+          'processed_at',
+          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        );
 
-      const avgConfidence = aiPerf && aiPerf.length > 0
-        ? aiPerf.reduce((acc, curr) => acc + (curr.ai_confidence || 0), 0) / aiPerf.length
-        : 0;
-      
-      const fallbackRate = aiPerf && aiPerf.length > 0
-        ? aiPerf.filter(a => a.is_fallback).length / aiPerf.length
-        : 0;
+      const avgConfidence =
+        aiPerf && aiPerf.length > 0
+          ? aiPerf.reduce((acc, curr) => acc + (curr.ai_confidence || 0), 0) /
+            aiPerf.length
+          : 0;
+
+      const fallbackRate =
+        aiPerf && aiPerf.length > 0
+          ? aiPerf.filter((a) => a.is_fallback).length / aiPerf.length
+          : 0;
 
       return res.json({
         ruleEfficiency: ruleStats || [],
@@ -361,12 +404,14 @@ export class NotificationController {
         aiMetrics: {
           avgConfidence,
           fallbackRate,
-          totalAnalyses: aiPerf?.length || 0
-        }
+          totalAnalyses: aiPerf?.length || 0,
+        },
       });
     } catch (error) {
-       console.error('Analytics Error:', error);
-       return res.status(500).json({ error: 'Failed to compute intelligence analytics' });
+      console.error('Analytics Error:', error);
+      return res
+        .status(500)
+        .json({ error: 'Failed to compute intelligence analytics' });
     }
   }
 
@@ -387,10 +432,13 @@ export class NotificationController {
       const { key, value, description } = req.body;
       const { data, error } = await supabase
         .from('system_settings')
-        .upsert({ key, value, description, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+        .upsert(
+          { key, value, description, updated_at: new Date().toISOString() },
+          { onConflict: 'key' },
+        )
         .select()
         .single();
-      
+
       if (error) throw error;
       return res.json(data);
     } catch (e) {
@@ -404,7 +452,8 @@ export class NotificationController {
   static async dryRunRule(req: Request, res: Response) {
     try {
       const { rule, event } = req.body;
-      if (!rule || !event) return res.status(400).json({ error: 'Rule and event required' });
+      if (!rule || !event)
+        return res.status(400).json({ error: 'Rule and event required' });
 
       const { condition_type, condition_value } = rule;
       const { source, event_type, title, metadata } = event;
@@ -415,10 +464,13 @@ export class NotificationController {
           matched = source?.toLowerCase() === condition_value?.toLowerCase();
           break;
         case 'type':
-          matched = event_type?.toLowerCase() === condition_value?.toLowerCase();
+          matched =
+            event_type?.toLowerCase() === condition_value?.toLowerCase();
           break;
         case 'title_contains':
-          matched = title?.toLowerCase().includes(condition_value?.toLowerCase());
+          matched = title
+            ?.toLowerCase()
+            .includes(condition_value?.toLowerCase());
           break;
         case 'metadata_match': {
           const [k, v] = (condition_value || '').split('=');
@@ -430,9 +482,9 @@ export class NotificationController {
       return res.json({
         matched,
         decision: matched ? rule.target_priority : 'SKIPPED',
-        reason: matched 
-          ? `Sandbox Success: Matched "${rule.name}"` 
-          : `Sandbox Skip: Payload did not satisfy "${condition_type}" criteria.`
+        reason: matched
+          ? `Sandbox Success: Matched "${rule.name}"`
+          : `Sandbox Skip: Payload did not satisfy "${condition_type}" criteria.`,
       });
     } catch (e) {
       return res.status(500).json({ error: 'Dry run execution failed' });

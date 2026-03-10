@@ -27,13 +27,11 @@ async function seed() {
       .eq('email', 'admin@cyepro.com');
     console.log('✅ Admin user updated! email: admin@cyepro.com');
   } else {
-    const { error } = await supabase
-      .from('users')
-      .insert({
-        email: 'admin@cyepro.com',
-        password_hash: passwordHash,
-        role: 'admin',
-      });
+    const { error } = await supabase.from('users').insert({
+      email: 'admin@cyepro.com',
+      password_hash: passwordHash,
+      role: 'admin',
+    });
     if (error) {
       console.error('Error seeding user:', error.message);
     } else {
@@ -42,21 +40,25 @@ async function seed() {
   }
 
   // Seed operator user
+  const opHash = await bcrypt.hash('operator123', 10);
   const { data: existingOp } = await supabase
     .from('users')
     .select('id')
     .eq('email', 'operator@cyepro.com')
     .single();
 
-  if (!existingOp) {
-    const opHash = await bcrypt.hash('operator123', 10);
+  if (existingOp) {
     await supabase
       .from('users')
-      .insert({
-        email: 'operator@cyepro.com',
-        password_hash: opHash,
-        role: 'operator',
-      });
+      .update({ password_hash: opHash, role: 'operator' })
+      .eq('email', 'operator@cyepro.com');
+    console.log('✅ Operator user updated! email: operator@cyepro.com');
+  } else {
+    await supabase.from('users').insert({
+      email: 'operator@cyepro.com',
+      password_hash: opHash,
+      role: 'operator',
+    });
     console.log('✅ Operator user created! email: operator@cyepro.com');
   }
 
@@ -84,6 +86,46 @@ async function seed() {
       priority_order: -1,
     });
     console.log('✅ Fatigue limit rule created!');
+  }
+
+  // Seed default system_settings
+  console.log('Seeding System Settings...');
+  const defaultSettings = [
+    {
+      key: 'AI_MODEL',
+      value: 'llama-3.3-70b-versatile',
+      description: 'Primary cognitive model for classification.',
+    },
+    {
+      key: 'DEDUPE_THRESHOLD',
+      value: '0.8',
+      description: 'Sensitivity for fuzzy duplicate detection (0.0-1.0).',
+    },
+    {
+      key: 'LATER_DELAY_MIN',
+      value: '30',
+      description: 'Default deferral period in minutes.',
+    },
+    {
+      key: 'FATIGUE_LIMIT',
+      value: '5',
+      description: 'Max high-priority alerts / hour / user.',
+    },
+  ];
+
+  for (const setting of defaultSettings) {
+    const { data: existing } = await supabase
+      .from('system_settings')
+      .select('id')
+      .eq('key', setting.key)
+      .single();
+
+    if (!existing) {
+      await supabase.from('system_settings').insert(setting);
+      console.log(`✅ Setting "${setting.key}" created.`);
+    } else {
+      console.log(`⏭️  Setting "${setting.key}" already exists.`);
+    }
   }
 }
 

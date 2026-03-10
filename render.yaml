@@ -1,21 +1,29 @@
 services:
   - type: web
-    name: notification-engine-spring
-    runtime: docker
-    rootDir: engine-next-supabase/backend-spring
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    name: notification-engine-supabase
+    runtime: node
+    rootDir: engine-next-supabase/backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
     plan: free
     envVars:
       - key: PORT
         value: '5000'
-      - key: DATABASE_URL
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: JWT_SECRET
         sync: false
       - key: GROQ_API_KEY
         sync: false
-      - key: MODEL_NAME
+      - key: GROQ_MODEL
         value: 'llama-3.3-70b-versatile'
-      - key: CORS_ORIGINS
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MODEL_NAME
+        value: 'gemini-flash-latest'
+      - key: NODE_ENV
+        value: 'production'
+      - key: FRONTEND_URL
         sync: false

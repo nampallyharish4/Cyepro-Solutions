@@ -4,36 +4,37 @@ This document describes the production deployment strategy for the Notification 
 
 ## Live Environment
 
-| Service | Provider | URL |
-|---------|----------|-----|
-| Frontend | Vercel | https://cyepro-solutions.vercel.app |
-
-| Database | Supabase | Managed PostgreSQL (cloud) |
-| Repository | GitHub | https://github.com/nampallyharish4/Cyepro-Solutions.git |
+| Service         | Provider | URL                                                     |
+| --------------- | -------- | ------------------------------------------------------- |
+| Frontend        | Vercel   | https://cyepro-solutions.vercel.app                     |
+| Backend         | Render   | _(configured via Render dashboard — see render.yaml)_   |
+| Database        | Supabase | Managed PostgreSQL (cloud)                              |
+| Health Endpoint | Render   | `<BACKEND_URL>/health`                                  |
+| Repository      | GitHub   | https://github.com/nampallyharish4/Cyepro-Solutions.git |
 
 ## Production Credentials
 
 Reviewers can access the live dashboard using the pre-filled credentials on the Login page:
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | `admin@cyepro.com` | `password123` |
+| Role     | Email                 | Password      |
+| -------- | --------------------- | ------------- |
+| Admin    | `admin@cyepro.com`    | `password123` |
 | Operator | `operator@cyepro.com` | `operator123` |
 
 ## Environment Variables (Vercel / Render)
 
-| Variable | Service | Description |
-|----------|---------|-------------|
-| `SUPABASE_URL` | Backend | Supabase project API endpoint |
-| `SUPABASE_SERVICE_ROLE_KEY` | Backend | Elevated key (bypasses RLS) |
-| `GROQ_API_KEY` | Backend | Groq Cloud LLM API key (Primary AI) |
-| `MODEL_NAME` | Backend | `llama-3.3-70b-versatile` |
-| `GEMINI_API_KEY` | Backend | Google Gemini API key (Fallback AI) |
-| `JWT_SECRET` | Backend | Token signing secret |
-| `NODE_ENV` | Backend | `production` |
-| `NEXT_PUBLIC_API_URL` | Frontend | Points to Render backend API |
-| `NEXT_PUBLIC_SUPABASE_URL` | Frontend | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Frontend | Supabase public anon key |
+| Variable                        | Service  | Description                         |
+| ------------------------------- | -------- | ----------------------------------- |
+| `SUPABASE_URL`                  | Backend  | Supabase project API endpoint       |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Backend  | Elevated key (bypasses RLS)         |
+| `GROQ_API_KEY`                  | Backend  | Groq Cloud LLM API key (Primary AI) |
+| `MODEL_NAME`                    | Backend  | `llama-3.3-70b-versatile`           |
+| `GEMINI_API_KEY`                | Backend  | Google Gemini API key (Fallback AI) |
+| `JWT_SECRET`                    | Backend  | Token signing secret                |
+| `NODE_ENV`                      | Backend  | `production`                        |
+| `NEXT_PUBLIC_API_URL`           | Frontend | Points to Render backend API        |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Frontend | Supabase project URL                |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Frontend | Supabase public anon key            |
 
 ## Secrets Management
 
@@ -42,12 +43,12 @@ Reviewers can access the live dashboard using the pre-filled credentials on the 
 
 ## Local vs Production
 
-| Aspect | Local | Production |
-|--------|-------|------------|
-| Database | Shared Supabase cloud (same instance) | Same Supabase cloud instance |
-| Backend URL | `http://127.0.0.1:5000/api` | Render URL |
-| SSL | Not required | Forced HTTPS on all calls |
-| AI Model | `llama-3.3-70b-versatile` via Groq | Same model, same provider |
+| Aspect      | Local                                 | Production                   |
+| ----------- | ------------------------------------- | ---------------------------- |
+| Database    | Shared Supabase cloud (same instance) | Same Supabase cloud instance |
+| Backend URL | `http://127.0.0.1:5000/api`           | Render URL                   |
+| SSL         | Not required                          | Forced HTTPS on all calls    |
+| AI Model    | `llama-3.3-70b-versatile` via Groq    | Same model, same provider    |
 
 ## CI/CD & Maintenance
 

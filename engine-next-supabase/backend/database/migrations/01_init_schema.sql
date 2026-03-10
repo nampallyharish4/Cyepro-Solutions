@@ -24,7 +24,8 @@ CREATE TABLE IF NOT EXISTS notification_events (
   dedupe_key TEXT,
   expires_at TIMESTAMPTZ,
   received_at TIMESTAMPTZ DEFAULT now(),
-  status TEXT DEFAULT 'PENDING' -- PENDING, PROCESSED, FAILED
+  status TEXT DEFAULT 'PENDING', -- PENDING, PROCESSED, FAILED
+  deleted_at TIMESTAMPTZ DEFAULT NULL -- Soft delete: NULL = active, timestamp = deleted
 );
 
 -- Decision Engine Rules
@@ -97,6 +98,7 @@ BEGIN
   FROM notification_events ne
   WHERE ne.user_id = p_user_id
     AND ne.status = 'PROCESSED'
+    AND ne.deleted_at IS NULL
     AND ne.received_at > now() - interval '24 hours'
     AND similarity(ne.title, p_title) > p_threshold
   ORDER BY sim DESC

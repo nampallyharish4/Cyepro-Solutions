@@ -22,15 +22,15 @@ This document describes the runtime execution flows for the Next.js + Supabase i
    - Entry created in `audit_logs` with decision (NOW/LATER/NEVER), reason, AI metadata.
    - `notification_events` status updated to `PROCESSED`.
    - If LATER: entry added to `deferred_queue` with `process_after = now + 30min`.
-   - Dashboard auto-refreshes via 5-second polling interval.
+   - Dashboard auto-refreshes via 8-second polling interval.
 
 ---
 
 ## 2. Failure Path — AI Service Unavailable
 
 1. **Network Timeout**: `AIService` enforces a strict **3-second timeout** on all LLM calls.
-2. **Quota Handling**: 429 rate-limit errors skip retry chains to deliver an immediate safe fallback.
-3. **Retry**: `axiosRetry` attempts 2 retries (500ms, 1000ms backoff) before throwing.
+2. **Retry**: `axiosRetry` attempts 2 retries (500ms, 1000ms backoff) for network errors, timeouts, 429 rate-limits, and 503 service unavailable responses.
+3. **Quota Handling**: 429 rate-limit errors are retried with backoff; if all retries are exhausted, the safe fallback triggers.
 4. **Circuit Breaker**: If failures exceed 5, the breaker opens for **5 minutes** — subsequent events skip AI entirely.
 5. **Fallback Trigger**: `AIService.fallBack()` executes.
 6. **Fallback Classification**: Event is assigned **LATER** with a friendly reason (e.g., `"Safe Fallback: AI Quota Exceeded"`).
@@ -64,7 +64,7 @@ This document describes the runtime execution flows for the Next.js + Supabase i
 ## 5. Deduplication Flow (Near-Duplicate)
 
 1. **Mechanism**: Uses `similarity()` from PostgreSQL `pg_trgm` extension.
-2. **Threshold**: Similarity score > 0.8 = near-duplicate.
+2. **Threshold**: Similarity score exceeds the configurable `DEDUPE_THRESHOLD` (default 0.8).
 3. **Scope**: Comparison is scoped per `user_id` across the last 24 hours.
 4. **Decision**: Match found → `NEVER` with reason `"Near-duplicate detected (Similarity: 0.XX)"`.
 
@@ -88,7 +88,7 @@ This document describes the runtime execution flows for the Next.js + Supabase i
 2. **Pre-flight Check**: Before saving, the admin uses the **Validation Sandbox** within the Rules Manager.
 3. **Mock Payload**: Admin enters test values for `Source`, `Type`, and `Title`.
 4. **Dry Run**: Frontend calls `POST /api/rules/dry-run`.
-5. **Validation Logic**: Backend executes a simulation of the `DecisionEngine`'s rule-matching logic *without* writing to the database or affecting production logs.
+5. **Validation Logic**: Backend executes a simulation of the `DecisionEngine`'s rule-matching logic _without_ writing to the database or affecting production logs.
 6. **Instant Feedback**: Frontend displays a "MATCHED" or "SKIPPED" status with the simulated outcome (`NOW`/`LATER`/`NEVER`) and the rule match reason.
 7. **Production Commit**: Admin saves the rule only after confirming it behaves as expected.
 

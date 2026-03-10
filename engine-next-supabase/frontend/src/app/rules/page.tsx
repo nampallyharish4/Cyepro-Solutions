@@ -51,7 +51,7 @@ export default function RulesManager() {
     source: 'AUTH_SERVICE',
     event_type: 'LOGIN_FAILURE',
     title: 'Multiple invalid password attempts',
-    metadata: {}
+    metadata: {},
   });
   const [isDryRunning, setIsDryRunning] = useState(false);
   const [dryRunResult, setDryRunResult] = useState<any>(null);
@@ -79,7 +79,10 @@ export default function RulesManager() {
       setRules(list.filter((r: any) => r.condition_type !== 'system_setting'));
       setApiError(null);
     } catch (e: any) {
-      const msg = e?.response?.data?.error || e?.message || 'Failed to load rules from server.';
+      const msg =
+        e?.response?.data?.error ||
+        e?.message ||
+        'Failed to load rules from server.';
       setApiError(msg);
       showToast(msg, 'error');
     } finally {
@@ -119,7 +122,7 @@ export default function RulesManager() {
     try {
       const { data } = await api.post('/rules/dry-run', {
         rule: newRule,
-        event: sandboxData
+        event: sandboxData,
       });
       setDryRunResult(data);
     } catch {
@@ -265,11 +268,19 @@ export default function RulesManager() {
         <div className="flex items-center gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-5 py-4">
           <AlertTriangle className="h-5 w-5 shrink-0 text-rose-400" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-rose-300">Failed to load rules</p>
-            <p className="text-xs text-rose-400/70 mt-0.5 truncate">{apiError}</p>
+            <p className="text-sm font-semibold text-rose-300">
+              Failed to load rules
+            </p>
+            <p className="text-xs text-rose-400/70 mt-0.5 truncate">
+              {apiError}
+            </p>
           </div>
           <button
-            onClick={() => { setApiError(null); setLoading(true); fetchRules(); }}
+            onClick={() => {
+              setApiError(null);
+              setLoading(true);
+              fetchRules();
+            }}
             className="shrink-0 text-xs font-bold text-rose-400 hover:text-white border border-rose-500/30 hover:bg-rose-500/20 px-3 py-1.5 rounded-xl transition-all"
           >
             Retry
@@ -300,9 +311,16 @@ export default function RulesManager() {
           <button
             onClick={handleUpdateFatigue}
             disabled={isUpdatingFatigue}
-            className="glass-button bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold whitespace-nowrap text-sm"
+            className="glass-button bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold whitespace-nowrap text-sm flex items-center gap-2"
           >
-            {isUpdatingFatigue ? 'Saving...' : 'Apply'}
+            {isUpdatingFatigue ? (
+              <>
+                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+                Saving...
+              </>
+            ) : (
+              'Apply'
+            )}
           </button>
         </div>
       </div>
@@ -401,64 +419,116 @@ export default function RulesManager() {
 
           {/* Validation Sandbox */}
           <div className="mt-10 border-t border-white/5 pt-8">
-             <div className="flex items-center gap-3 mb-6">
-                <div className="h-8 w-8 rounded-xl bg-cyan-600/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                   <Microscope className="h-4 w-4" />
-                </div>
-                <div>
-                   <h4 className="text-sm font-black text-white uppercase italic">Validation Sandbox</h4>
-                   <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Test this protocol before saving</p>
-                </div>
-             </div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-8 w-8 rounded-xl bg-cyan-600/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <Microscope className="h-4 w-4" />
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-white uppercase italic">
+                  Validation Sandbox
+                </h4>
+                <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+                  Test this protocol before saving
+                </p>
+              </div>
+            </div>
 
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white/[0.01] p-6 rounded-2xl border border-white/5">
-                <div className="space-y-4">
-                   <div className="grid grid-cols-2 gap-3">
-                      <InputGroup label="Test Source" value={sandboxData.source} onChange={(v: string) => setSandboxData({...sandboxData, source: v})} placeholder="e.g. AUTH_SERVICE" />
-                      <InputGroup label="Test Type" value={sandboxData.event_type} onChange={(v: string) => setSandboxData({...sandboxData, event_type: v})} placeholder="e.g. LOGIN_FAILED" />
-                   </div>
-                   <InputGroup label="Test Title" value={sandboxData.title} onChange={(v: string) => setSandboxData({...sandboxData, title: v})} placeholder="e.g. Unusual login detected" />
-                   <button 
-                      onClick={handleDryRun}
-                      disabled={isDryRunning}
-                      className="w-full py-3 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-cyan-400 font-black uppercase text-[10px] tracking-widest hover:bg-cyan-500/10 transition-all flex items-center justify-center gap-2"
-                   >
-                     {isDryRunning ? 'Analyzing...' : <><Zap className="h-3 w-3" /> Execute Dry Run</>}
-                   </button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 bg-white/[0.01] p-6 rounded-2xl border border-white/5">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <InputGroup
+                    label="Test Source"
+                    value={sandboxData.source}
+                    onChange={(v: string) =>
+                      setSandboxData({ ...sandboxData, source: v })
+                    }
+                    placeholder="e.g. AUTH_SERVICE"
+                  />
+                  <InputGroup
+                    label="Test Type"
+                    value={sandboxData.event_type}
+                    onChange={(v: string) =>
+                      setSandboxData({ ...sandboxData, event_type: v })
+                    }
+                    placeholder="e.g. LOGIN_FAILED"
+                  />
                 </div>
+                <InputGroup
+                  label="Test Title"
+                  value={sandboxData.title}
+                  onChange={(v: string) =>
+                    setSandboxData({ ...sandboxData, title: v })
+                  }
+                  placeholder="e.g. Unusual login detected"
+                />
+                <button
+                  onClick={handleDryRun}
+                  disabled={isDryRunning}
+                  className="w-full py-3 rounded-xl border border-cyan-500/30 bg-cyan-500/5 text-cyan-400 font-black uppercase text-[10px] tracking-widest hover:bg-cyan-500/10 transition-all flex items-center justify-center gap-2"
+                >
+                  {isDryRunning ? (
+                    <>
+                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="h-3 w-3" /> Execute Dry Run
+                    </>
+                  )}
+                </button>
+              </div>
 
-                <div className="flex flex-col justify-center">
-                   <AnimatePresence mode="wait">
-                      {dryRunResult ? (
-                        <motion.div 
-                          key="result"
-                          initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                          className={`p-6 rounded-2xl border flex flex-col items-center text-center gap-3 ${dryRunResult.matched ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}
+              <div className="flex flex-col justify-center">
+                <AnimatePresence mode="wait">
+                  {dryRunResult ? (
+                    <motion.div
+                      key="result"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className={`p-6 rounded-2xl border flex flex-col items-center text-center gap-3 ${dryRunResult.matched ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}
+                    >
+                      <div
+                        className={`h-12 w-12 rounded-full flex items-center justify-center ${dryRunResult.matched ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}
+                      >
+                        {dryRunResult.matched ? (
+                          <CheckCircle2 className="h-6 w-6" />
+                        ) : (
+                          <X className="h-6 w-6" />
+                        )}
+                      </div>
+                      <div>
+                        <p
+                          className={`text-xs font-black uppercase tracking-widest ${dryRunResult.matched ? 'text-emerald-400' : 'text-rose-400'}`}
                         >
-                           <div className={`h-12 w-12 rounded-full flex items-center justify-center ${dryRunResult.matched ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
-                              {dryRunResult.matched ? <CheckCircle2 className="h-6 w-6" /> : <X className="h-6 w-6" />}
-                           </div>
-                           <div>
-                              <p className={`text-xs font-black uppercase tracking-widest ${dryRunResult.matched ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                 {dryRunResult.matched ? 'PROTOCOL MATCHED' : 'PROTOCOL SKIPPED'}
-                              </p>
-                              <p className="text-[11px] text-zinc-500 font-medium mt-1 italic">{dryRunResult.reason}</p>
-                              {dryRunResult.matched && (
-                                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500 text-black text-[10px] font-black uppercase tracking-tighter italic">
-                                   Output: {dryRunResult.decision}
-                                </div>
-                              )}
-                           </div>
-                        </motion.div>
-                      ) : (
-                        <div key="placeholder" className="h-full flex flex-col items-center justify-center p-6 text-center opacity-30">
-                           <Database className="h-10 w-10 text-zinc-600 mb-3" />
-                           <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Waiting for simulation input...</p>
-                        </div>
-                      )}
-                   </AnimatePresence>
-                </div>
-             </div>
+                          {dryRunResult.matched
+                            ? 'PROTOCOL MATCHED'
+                            : 'PROTOCOL SKIPPED'}
+                        </p>
+                        <p className="text-[11px] text-zinc-500 font-medium mt-1 italic">
+                          {dryRunResult.reason}
+                        </p>
+                        {dryRunResult.matched && (
+                          <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500 text-black text-[10px] font-black uppercase tracking-tighter italic">
+                            Output: {dryRunResult.decision}
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <div
+                      key="placeholder"
+                      className="h-full flex flex-col items-center justify-center p-6 text-center opacity-30"
+                    >
+                      <Database className="h-10 w-10 text-zinc-600 mb-3" />
+                      <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
+                        Waiting for simulation input...
+                      </p>
+                    </div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -692,7 +762,9 @@ export default function RulesManager() {
       <div className="md:hidden space-y-3">
         {loading ? (
           <div className="space-y-3">
-            {[0,1,2,3].map(i => <SkeletonCard key={i} lines={3} />)}
+            {[0, 1, 2, 3].map((i) => (
+              <SkeletonCard key={i} lines={3} />
+            ))}
           </div>
         ) : rules.length === 0 ? (
           <div className="glass-card p-10 text-center text-zinc-600">

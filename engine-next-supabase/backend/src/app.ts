@@ -18,6 +18,15 @@ import deferredQueueRoutes from './routes/deferredQueueRoutes';
 const app = express();
 const port = process.env.PORT || 5000;
 
+// Global error handlers to prevent silent pipeline failures
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('CRITICAL: Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('CRITICAL: Uncaught Exception:', error);
+});
+
 // 1. Security Headers
 app.use(helmet());
 
