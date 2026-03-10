@@ -18,6 +18,17 @@ import deferredQueueRoutes from './routes/deferredQueueRoutes';
 const app = express();
 const port = process.env.PORT || 5000;
 
+// Trust proxy headers when running behind a managed reverse proxy (e.g. Render).
+// Can be overridden explicitly with TRUST_PROXY (0, 1, true, false).
+if (process.env.TRUST_PROXY !== undefined) {
+  const configured = process.env.TRUST_PROXY.trim().toLowerCase();
+  if (configured === 'true') app.set('trust proxy', true);
+  else if (configured === 'false') app.set('trust proxy', false);
+  else app.set('trust proxy', Number(configured) || 0);
+} else if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Global error handlers to prevent silent pipeline failures
 process.on('unhandledRejection', (reason, promise) => {
   console.error(
