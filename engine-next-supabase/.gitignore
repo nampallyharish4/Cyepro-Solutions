@@ -21,6 +21,16 @@ yarn-error.log*
 .pnpm-debug.log*
 *.log
 
+# Temporary / backup artifacts
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.rej
+*.seed
+layout_history.txt
+
 # IDEs & OS
 .vscode/
 .idea/

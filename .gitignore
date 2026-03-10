@@ -1,0 +1,28 @@
+# Workspace-level ignores
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+**/coverage/
+**/.cache/
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.tsbuildinfo
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+
+# Local env files
+.env
+.env.local
+.env.*.local

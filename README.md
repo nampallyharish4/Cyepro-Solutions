@@ -14,24 +14,25 @@ The system flows through a **Deterministic → Intelligent → Fail-Safe** pipel
 
 ## Live Deployments
 
-| Service | URL |
-|---------|-----|
-| Frontend (Vercel) | https://cyepro-solutions.vercel.app |
+| Service           | URL                                                     |
+| ----------------- | ------------------------------------------------------- |
+| Frontend (Vercel) | https://cyepro-solutions.vercel.app                     |
 | GitHub Repository | https://github.com/nampallyharish4/Cyepro-Solutions.git |
 
 ## Tech Stack
 
-| Layer | Technology | Reason |
-|-------|-----------|--------|
-| **Frontend** | Next.js 15 (App Router), Tailwind CSS, Framer Motion, Recharts | Performance, SEO, premium management console UX |
-| **Backend** | Node.js / Express.js, TypeScript, Supabase Admin SDK | Reliable orchestration, simple AI integration |
-| **Database** | Supabase (PostgreSQL) | Strict schema safety, relational integrity for audit trails, `pg_trgm` near-duplicate text detection |
-| **AI (Primary)** | Groq (Llama-3.3-70b-versatile) | Sub-second LPU inference |
-| **AI (Fallback)** | Google Gemini | Automatic secondary fallback |
+| Layer             | Technology                                                     | Reason                                                                                               |
+| ----------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Frontend**      | Next.js 15 (App Router), Tailwind CSS, Framer Motion, Recharts | Performance, SEO, premium management console UX                                                      |
+| **Backend**       | Node.js / Express.js, TypeScript, Supabase Admin SDK           | Reliable orchestration, simple AI integration                                                        |
+| **Database**      | Supabase (PostgreSQL)                                          | Strict schema safety, relational integrity for audit trails, `pg_trgm` near-duplicate text detection |
+| **AI (Primary)**  | Groq (Llama-3.3-70b-versatile)                                 | Sub-second LPU inference                                                                             |
+| **AI (Fallback)** | Google Gemini                                                  | Automatic secondary fallback                                                                         |
 
 ## Setup & Running
 
 ### Prerequisites
+
 - Node.js v18+
 - npm or yarn
 - Supabase Project (PostgreSQL)
@@ -86,6 +87,7 @@ The system flows through a **Deterministic → Intelligent → Fail-Safe** pipel
   ```
 
 ### AI Failure Resilience
+
 1. `axiosRetry` with 2 retries (500ms / 1000ms backoff) on network failure.
 2. Hard 3-second timeout per LLM request.
 3. 429 quota errors → instant fallback (no retry waste).
@@ -96,18 +98,22 @@ The system flows through a **Deterministic → Intelligent → Fail-Safe** pipel
 ## Key Design Decisions
 
 ### What the frontend does differently
+
 - **Login "Stay" fix**: Token is held in React state only until the user confirms "Enter System". Clicking "Stay" discards credentials — no auto-login on modal dismiss.
 - **Logout confirmation**: A confirmation modal prevents accidental session termination.
 - **Rules null-safety**: `getRules` always returns `[]`, frontend guards `.find()` / `.filter()` with `Array.isArray()`.
 - **Loaders everywhere**: Triple-ring spinner for page-level loading, skeleton rows/cards for data tables/lists.
 
 ### PostgreSQL vs MongoDB
+
 `pg_trgm` provides superior near-duplicate text detection without external vector databases, and enforces relational integrity across event audits.
 
 ### Soft Deletes
+
 All rule deletions set `is_active = false` — hard deletes are never executed, preserving full data recovery capability.
 
 ### Queue Scalability
+
 The LATER queue uses a 1-minute `setInterval` poller. Production scale would require Redis/BullMQ, but this implementation demonstrates the full lifecycle (WAITING → PROCESSING → SENT / FAILED → DEAD_LETTER).
 
 ## Additional Documentation
@@ -116,3 +122,9 @@ The LATER queue uses a 1-minute `setInterval` poller. Production scale would req
 - [engine-next-supabase/PLAN_OF_ACTION.md](./engine-next-supabase/PLAN_OF_ACTION.md) — Phased development log
 - [engine-next-supabase/SYSTEM_WORKFLOW.md](./engine-next-supabase/SYSTEM_WORKFLOW.md) — Runtime logic and failure flows
 - [engine-next-supabase/DEPLOYMENT.md](./engine-next-supabase/DEPLOYMENT.md) — Live URLs and cloud configuration
+
+## Repository Hygiene
+
+- Removed temporary debug scripts that were not part of runtime or build flow.
+- Build artifacts and local caches (for example `node_modules`, `.next`, and `dist`) should remain untracked.
+- Temporary local files (for example `*.tmp`, `*.bak`, and ad-hoc output logs) are now covered by `.gitignore` rules.

@@ -248,6 +248,12 @@ Hint: {event.priority_hint}  (if provided)
 ## Documentation
 
 - [SYSTEM_WORKFLOW.md](./SYSTEM_WORKFLOW.md) — Detailed runtime execution flows
+
+## Cleanup Notes
+
+- Removed non-essential local debug scripts from `backend/` and `frontend/`.
+- Generated directories such as `backend/dist`, `frontend/.next`, and package manager installs must not be committed.
+- `.gitignore` rules were expanded to ignore common temporary and backup files.
 - [PLAN_OF_ACTION.md](./PLAN_OF_ACTION.md) — Phased development log with reasoning
 - [ARCHITECTURE_DECISIONS.md](./ARCHITECTURE_DECISIONS.md) — Technical decision justifications
 - [DEPLOYMENT.md](./DEPLOYMENT.md) — Live URLs and production environment specs

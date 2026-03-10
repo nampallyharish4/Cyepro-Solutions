@@ -15,6 +15,15 @@ yarn-debug.log*
 yarn-error.log*
 dev_output.log
 build_output*.log
+*.log
+
+# Temporary / backup artifacts
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.rej
 
 # IDEs
 .vscode/

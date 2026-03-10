@@ -30,6 +30,15 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# temporary / backup artifacts
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.rej
+layout_history.txt
+
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
