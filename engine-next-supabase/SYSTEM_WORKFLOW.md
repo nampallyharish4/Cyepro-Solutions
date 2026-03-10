@@ -10,8 +10,8 @@ This document describes the runtime execution flows for the Next.js + Supabase i
 2. **API Request**: The frontend sends a `POST /api/notifications` to the Express backend.
 3. **Initial Storage**:
    - The backend saves the raw event to `notification_events` (initial status `PENDING`).
-   - The engine executes the pipeline and returns decision payload in the same request.
-4. **Decision Pipeline**: `DecisionEngine.processEvent()` orchestrates expiry, dedupe, rules, fatigue, and AI fallback logic.
+   - API immediately returns `202 Accepted` with `event_id`.
+4. **Asynchronous Pipeline**: `DecisionEngine.executeEnginePipeline()` runs in the background for the saved `event_id`.
 5. **Deduplication**:
    - **Exact**: Checks matching `dedupe_key`.
    - **Near-Duplicate**: PostgreSQL `pg_trgm` similarity > 0.8 against same user's events in last 24h.
@@ -25,7 +25,7 @@ This document describes the runtime execution flows for the Next.js + Supabase i
    - Dashboard auto-refreshes via 8-second polling interval.
 10. **Pending Fallback Handling**:
 
-- If any client receives a temporary pending state, frontend polls `GET /api/notifications/:id` until a terminal decision is available.
+- Frontend polls `GET /api/notifications/:id` until a terminal decision (`NOW/LATER/NEVER`) is available.
 
 ---
 

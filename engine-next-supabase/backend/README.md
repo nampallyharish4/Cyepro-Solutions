@@ -15,7 +15,7 @@ Built with **Node.js · Express · TypeScript · Supabase · Groq (Llama-3.3-70b
 
 | Method | Route                    | Access | Description                                                 |
 | ------ | ------------------------ | ------ | ----------------------------------------------------------- |
-| POST   | `/api/notifications`     | Auth   | Submit event and return decision payload                    |
+| POST   | `/api/notifications`     | Auth   | Submit event (`202 Accepted`) and queue async processing    |
 | GET    | `/api/notifications/:id` | Auth   | Fetch latest event status/decision (used by simulator poll) |
 | GET    | `/api/metrics`           | Auth   | Dashboard totals + recent activity                          |
 | GET    | `/api/metrics/timeline`  | Auth   | 24h hourly NOW/LATER/NEVER buckets                          |

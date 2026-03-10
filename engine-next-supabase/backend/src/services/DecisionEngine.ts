@@ -20,10 +20,9 @@ export interface NotificationEvent {
 
 export class DecisionEngine {
   /**
-   * Main entry point for a new event
+   * Persist an event and return immediately (async processing happens separately)
    */
-  static async processEvent(event: NotificationEvent) {
-    // 1. Initial storage
+  static async enqueueEvent(event: NotificationEvent) {
     const { data: savedEvent, error: saveError } = await supabase
       .from('notification_events')
       .insert([
@@ -38,6 +37,15 @@ export class DecisionEngine {
     if (saveError || !savedEvent) {
       throw new Error(`Failed to save event: ${saveError?.message}`);
     }
+
+    return savedEvent;
+  }
+
+  /**
+   * Compatibility helper: enqueue + process + fetch latest audit result
+   */
+  static async processEvent(event: NotificationEvent) {
+    const savedEvent = await this.enqueueEvent(event);
 
     // Await pipeline so the decision is available immediately
     await this.executeEnginePipeline(savedEvent.id);

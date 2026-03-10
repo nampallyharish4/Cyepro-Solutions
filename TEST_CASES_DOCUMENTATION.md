@@ -62,18 +62,18 @@ This document provides **50+ structured test cases** covering every requirement 
 
 ### TC-1.3: Login — Invalid Password
 
-| Field        | Value                                                          |
-| ------------ | -------------------------------------------------------------- |
-| **Body**     | `{ "email": "admin@cyepro.com", "password": "wrongpassword" }` |
-| **Expected** | `401 Unauthorized` with `{ error: "Invalid credentials" }`     |
-| **UI Step**  | Error toast appears, stays on login page                       |
+| Field        | Value                                                             |
+| ------------ | ----------------------------------------------------------------- |
+| **Body**     | `{ "email": "admin@cyepro.com", "password": "wrongpassword" }`    |
+| **Expected** | `401 Unauthorized` with `{ error: "Invalid email or password." }` |
+| **UI Step**  | Error toast appears, stays on login page                          |
 
 ### TC-1.4: Login — Non-Existent User
 
-| Field        | Value                                                      |
-| ------------ | ---------------------------------------------------------- |
-| **Body**     | `{ "email": "nobody@cyepro.com", "password": "whatever" }` |
-| **Expected** | `401 Unauthorized` with `{ error: "Invalid credentials" }` |
+| Field        | Value                                                             |
+| ------------ | ----------------------------------------------------------------- |
+| **Body**     | `{ "email": "nobody@cyepro.com", "password": "whatever" }`        |
+| **Expected** | `401 Unauthorized` with `{ error: "Invalid email or password." }` |
 
 ### TC-1.5: Protected Route — No Token
 
@@ -257,7 +257,7 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 
 | Step             | Action                                                                          |
 | ---------------- | ------------------------------------------------------------------------------- |
-| 1                | Verify FATIGUE_LIMIT rule is set to `5` in Rules page                           |
+| 1                | Verify `FATIGUE_LIMIT` setting is set to `5` in Rules page                      |
 | 2                | Send **5 different critical events** to `user_id = fatigue_test_user` rapidly   |
 | 3                | Check Audit Log — all 5 should be classified as **NOW**                         |
 | 4                | Send a **6th critical event** to the same `fatigue_test_user`                   |
@@ -269,7 +269,7 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 
 | Step          | Action                                                                        |
 | ------------- | ----------------------------------------------------------------------------- |
-| 1             | Go to Rules page → edit FATIGUE_LIMIT → change value to `2`                   |
+| 1             | Go to Rules page → update fatigue threshold to `2` (writes `system_settings`) |
 | 2             | Send 3 events to a **new** `user_id = fatigue_update_user`                    |
 | **Expected**  | Events 1-2 → AI classified. Event 3 → **LATER** (fatigue with new limit of 2) |
 | **Validates** | Runtime-configurable fatigue without server restart                           |
@@ -514,7 +514,7 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 | ------------ | --------------------------------------------------------------------------------------------- |
 | 1            | Open Dashboard page                                                                           |
 | 2            | Submit events from Simulator (in another tab)                                                 |
-| **Expected** | Dashboard updates automatically (5-second polling interval) — totals, charts, recent activity |
+| **Expected** | Dashboard updates automatically (8-second polling interval) — totals, charts, recent activity |
 
 ### TC-11.2: Metrics Accuracy
 
@@ -610,6 +610,14 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 | **Endpoint**  | `POST /api/notifications`                                                                  |
 | **Expected**  | `202 Accepted` with `{ event_id, status: "PENDING" }` — processing continues in background |
 | **Validates** | Async processing: "AI processing must not block the user's request"                        |
+
+### TC-13.1A: Event Status Polling Endpoint
+
+| Field         | Value                                                                                             |
+| ------------- | ------------------------------------------------------------------------------------------------- |
+| **Endpoint**  | `GET /api/notifications/:id`                                                                      |
+| **Expected**  | `200 OK` with latest status/decision payload (`PENDING` while processing, then `NOW/LATER/NEVER`) |
+| **Validates** | Frontend simulator can resolve asynchronous decisions without manual refresh                      |
 
 ### TC-13.2: Expired Event — Auto-NEVER
 
@@ -898,82 +906,82 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 
 ### TC-17.1: Login — "Stay" Does Not Auto-Login
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Enter valid admin credentials and click **Sign In** | Success modal appears ("Access Granted") |
-| 2 | Click **"Stay"** button | Modal closes, stays on `/login` page |
-| 3 | Refresh the page | Still on `/login` — `localStorage` is empty, no auto-redirect |
+| Step          | Action                                                                | Expected                                                      |
+| ------------- | --------------------------------------------------------------------- | ------------------------------------------------------------- |
+| 1             | Enter valid admin credentials and click **Sign In**                   | Success modal appears ("Access Granted")                      |
+| 2             | Click **"Stay"** button                                               | Modal closes, stays on `/login` page                          |
+| 3             | Refresh the page                                                      | Still on `/login` — `localStorage` is empty, no auto-redirect |
 | **Validates** | Token is held in React state only, not committed until "Enter System" |
 
 ### TC-17.2: Login — "Enter System" Commits Token and Navigates
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Enter valid credentials → click Sign In → modal appears | Success modal |
-| 2 | Click **"Enter System"** | Token written to `localStorage`, redirect to `/` dashboard |
-| 3 | Refresh dashboard | Still logged in — token persisted |
+| Step | Action                                                  | Expected                                                   |
+| ---- | ------------------------------------------------------- | ---------------------------------------------------------- |
+| 1    | Enter valid credentials → click Sign In → modal appears | Success modal                                              |
+| 2    | Click **"Enter System"**                                | Token written to `localStorage`, redirect to `/` dashboard |
+| 3    | Refresh dashboard                                       | Still logged in — token persisted                          |
 
 ### TC-17.3: Login — Error Modal on Wrong Credentials
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Enter wrong password and click Sign In | "Access Denied" error modal appears |
-| 2 | Click ✕ or outside the modal | Modal closes, stays on `/login` |
+| Step | Action                                 | Expected                            |
+| ---- | -------------------------------------- | ----------------------------------- |
+| 1    | Enter wrong password and click Sign In | "Access Denied" error modal appears |
+| 2    | Click ✕ or outside the modal           | Modal closes, stays on `/login`     |
 
 ### TC-17.4: Logout — Confirmation Modal
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Login and navigate to any page | Sidebar visible |
-| 2 | Click **Logout** in sidebar | Confirmation modal appears ("Sign Out?") |
-| 3 | Click **"Stay Logged In"** | Modal closes, still logged in |
-| 4 | Click Logout again → click **"Sign Out"** | `localStorage` cleared, redirected to `/login` |
+| Step | Action                                    | Expected                                       |
+| ---- | ----------------------------------------- | ---------------------------------------------- |
+| 1    | Login and navigate to any page            | Sidebar visible                                |
+| 2    | Click **Logout** in sidebar               | Confirmation modal appears ("Sign Out?")       |
+| 3    | Click **"Stay Logged In"**                | Modal closes, still logged in                  |
+| 4    | Click Logout again → click **"Sign Out"** | `localStorage` cleared, redirected to `/login` |
 
 ### TC-17.5: Auth Guard — Unauthenticated Redirect
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Clear `localStorage` manually | — |
-| 2 | Navigate to `/` | Triple-ring loader appears briefly, then redirect to `/login` |
+| Step | Action                        | Expected                                                      |
+| ---- | ----------------------------- | ------------------------------------------------------------- |
+| 1    | Clear `localStorage` manually | —                                                             |
+| 2    | Navigate to `/`               | Triple-ring loader appears briefly, then redirect to `/login` |
 
 ### TC-17.6: Auth Guard — Already Logged In
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | With a valid token in `localStorage`, navigate to `/login` | Triple-ring loader, then redirect to `/` |
+| Step | Action                                                     | Expected                                 |
+| ---- | ---------------------------------------------------------- | ---------------------------------------- |
+| 1    | With a valid token in `localStorage`, navigate to `/login` | Triple-ring loader, then redirect to `/` |
 
 ### TC-17.7: Loading States — All Data Pages
 
-| Page | Loader |
-|------|--------|
-| Auth guard | Full-screen triple-ring centered (fixed inset-0) |
-| Audit Log | `PageLoader` spinner while fetching |
-| LATER Queue | `PageLoader` spinner while fetching |
-| Rules — desktop | `SkeletonRow` shimmer (table rows) |
-| Rules — mobile | `SkeletonCard` shimmer (card blocks) |
+| Page            | Loader                                           |
+| --------------- | ------------------------------------------------ |
+| Auth guard      | Full-screen triple-ring centered (fixed inset-0) |
+| Audit Log       | `PageLoader` spinner while fetching              |
+| LATER Queue     | `PageLoader` spinner while fetching              |
+| Rules — desktop | `SkeletonRow` shimmer (table rows)               |
+| Rules — mobile  | `SkeletonCard` shimmer (card blocks)             |
 
 ### TC-17.8: Rules Page — Error Banner on API Failure
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Stop the backend server | — |
-| 2 | Navigate to `/rules` | Red error banner appears: "Failed to load rules" with specific error message |
-| 3 | Restart backend → click **Retry** | Rules load normally, error banner disappears |
+| Step | Action                            | Expected                                                                     |
+| ---- | --------------------------------- | ---------------------------------------------------------------------------- |
+| 1    | Stop the backend server           | —                                                                            |
+| 2    | Navigate to `/rules`              | Red error banner appears: "Failed to load rules" with specific error message |
+| 3    | Restart backend → click **Retry** | Rules load normally, error banner disappears                                 |
 
 ### TC-17.9: Signup — Password Strength Meter
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Navigate to `/signup`, start typing a password | Live strength bar appears below the field |
-| 2 | Type `abc` | Bar shows red / "Weak" |
-| 3 | Type `Abc123!@#` | Bar shows green / "Strong" |
-| 4 | Try to submit with a weak password | Error modal: "Password is too weak" |
+| Step | Action                                         | Expected                                  |
+| ---- | ---------------------------------------------- | ----------------------------------------- |
+| 1    | Navigate to `/signup`, start typing a password | Live strength bar appears below the field |
+| 2    | Type `abc`                                     | Bar shows red / "Weak"                    |
+| 3    | Type `Abc123!@#`                               | Bar shows green / "Strong"                |
+| 4    | Try to submit with a weak password             | Error modal: "Password is too weak"       |
 
 ### TC-17.10: Signup — Duplicate Email Detection
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Sign up with `admin@cyepro.com` | Error modal: "An account with this email already exists" |
+| Step | Action                          | Expected                                                 |
+| ---- | ------------------------------- | -------------------------------------------------------- |
+| 1    | Sign up with `admin@cyepro.com` | Error modal: "An account with this email already exists" |
 
 ---
 
@@ -981,53 +989,53 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 
 ### TC-18.1: Rule Sandbox — Validate Match (Dry Run)
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Navigate to **Rules Protocol** | All active rules visible |
-| 2 | Click **Create Rule** | Drawer opens |
-| 3 | Define: Type = `title_contains`, Value = `Urgent` | — |
-| 4 | Scroll to **Validation Sandbox** | Mock fields visible |
-| 5 | Fill Sandbox: Title = `URGENT ACTION` | — |
-| 6 | Click **Dry Run Logic** | Result: **MATCHED** with decision **NOW** |
-| 7 | Fill Sandbox: Title = `Normal Update` | — |
-| 8 | Click **Dry Run Logic** | Result: **SKIPPED** (engine would use AI) |
+| Step          | Action                                                      | Expected                                  |
+| ------------- | ----------------------------------------------------------- | ----------------------------------------- |
+| 1             | Navigate to **Rules Protocol**                              | All active rules visible                  |
+| 2             | Click **Create Rule**                                       | Drawer opens                              |
+| 3             | Define: Type = `title_contains`, Value = `Urgent`           | —                                         |
+| 4             | Scroll to **Validation Sandbox**                            | Mock fields visible                       |
+| 5             | Fill Sandbox: Title = `URGENT ACTION`                       | —                                         |
+| 6             | Click **Dry Run Logic**                                     | Result: **MATCHED** with decision **NOW** |
+| 7             | Fill Sandbox: Title = `Normal Update`                       | —                                         |
+| 8             | Click **Dry Run Logic**                                     | Result: **SKIPPED** (engine would use AI) |
 | **Validates** | Rule Sandbox simulates engine logic without DB side-effects |
 
 ### TC-18.2: Intelligence Tuning — Dynamic threshold
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Navigate to **Intelligence Tuning** (Settings) | Current config visible |
-| 2 | Update **Fatigue Limit** from 5 to 2 | Success toast appears |
-| 3 | Use Simulator: Send 3 NOW events | 1-2 are NOW, 3rd is LATER (Fatigue) |
-| **Validates** | Zero-restart dynamic configuration updates |
+| Step          | Action                                         | Expected                            |
+| ------------- | ---------------------------------------------- | ----------------------------------- |
+| 1             | Navigate to **Intelligence Tuning** (Settings) | Current config visible              |
+| 2             | Update **Fatigue Limit** from 5 to 2           | Success toast appears               |
+| 3             | Use Simulator: Send 3 NOW events               | 1-2 are NOW, 3rd is LATER (Fatigue) |
+| **Validates** | Zero-restart dynamic configuration updates     |
 
 ### TC-18.3: Forensic Simulator — Decision Stream
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Navigate to **System Simulator** | New forensic UI visible |
-| 2 | Submit a packet | Center card shows real-time "Orchestrating..." |
-| 3 | After result | **Forensic Analysis** displays: Global Event ID, Reasoning, Pipeline Consensus icon |
-| 4 | Check **Decision Stream** | History card shows the latest outcome with live timestamp |
-| 5 | Click a history item | Re-renders the **Forensic Analysis** for that historical event |
+| Step | Action                           | Expected                                                                            |
+| ---- | -------------------------------- | ----------------------------------------------------------------------------------- |
+| 1    | Navigate to **System Simulator** | New forensic UI visible                                                             |
+| 2    | Submit a packet                  | Center card shows real-time "Orchestrating..."                                      |
+| 3    | After result                     | **Forensic Analysis** displays: Global Event ID, Reasoning, Pipeline Consensus icon |
+| 4    | Check **Decision Stream**        | History card shows the latest outcome with live timestamp                           |
+| 5    | Click a history item             | Re-renders the **Forensic Analysis** for that historical event                      |
 
 ### TC-18.4: Auth Hardening — Clean Slate Policy
 
-| Step | Action | Expected |
-|------|--------|----------|
-| 1 | Go to **Login** → fill credentials → Sign In | Success modal |
-| 2 | Click **"Stay"** | Modal closes AND **Username/Password fields are cleared** |
-| 3 | Refresh page | Fields remain empty |
+| Step          | Action                                                                  | Expected                                                  |
+| ------------- | ----------------------------------------------------------------------- | --------------------------------------------------------- |
+| 1             | Go to **Login** → fill credentials → Sign In                            | Success modal                                             |
+| 2             | Click **"Stay"**                                                        | Modal closes AND **Username/Password fields are cleared** |
+| 3             | Refresh page                                                            | Fields remain empty                                       |
 | **Validates** | Security: "Stay" removes sensitive data from memory vs simply hiding it |
 
 ### TC-18.5: System Pulse — Vitality Monitor
 
-| Check | Target | Expected |
-|-------|--------|----------|
-| 1 | Sidebar Pulse Widget | Pulse dot is animating (heartbeat) |
-| 2 | Vitality Label | Shows currently active AI architecture (e.g., Llama/Gemini) |
-| 3 | Health Refresh | Navigate between pages; Pulse remains persistent and accurate |
+| Check | Target               | Expected                                                      |
+| ----- | -------------------- | ------------------------------------------------------------- |
+| 1     | Sidebar Pulse Widget | Pulse dot is animating (heartbeat)                            |
+| 2     | Vitality Label       | Shows currently active AI architecture (e.g., Llama/Gemini)   |
+| 3     | Health Refresh       | Navigate between pages; Pulse remains persistent and accurate |
 
 ---
 

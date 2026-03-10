@@ -5,7 +5,7 @@ import { DecisionEngine } from '../services/DecisionEngine';
 export class NotificationController {
   /**
    * Submit an event
-   * Processes synchronously and returns the decision instantly.
+   * Responds immediately; engine processing continues asynchronously.
    */
   static async submitEvent(req: Request, res: Response) {
     try {
@@ -19,22 +19,30 @@ export class NotificationController {
         });
       }
 
-      const result = await DecisionEngine.processEvent(eventData);
+      const savedEvent = await DecisionEngine.enqueueEvent(eventData);
 
-      return res.status(200).json({
-        message: 'Event processed',
-        event_id: result.id,
-        status: result.audit?.decision
-          ? 'COMPLETED'
-          : result.status || 'PENDING',
-        decision: result.audit?.decision || result.status || 'PENDING',
-        reason: result.audit?.reason || '',
-        ai_used: result.audit?.ai_used || false,
-        ai_model: result.audit?.ai_model || null,
-        ai_confidence: result.audit?.ai_confidence || null,
-        is_fallback: result.audit?.is_fallback || false,
-        rule_id: result.audit?.rule_id || null,
-        processed_at: result.audit?.processed_at || null,
+      // Fire-and-forget background processing to keep request latency low.
+      void DecisionEngine.executeEnginePipeline(savedEvent.id).catch(
+        (error) => {
+          console.error(
+            `Background pipeline failed for event ${savedEvent.id}:`,
+            error,
+          );
+        },
+      );
+
+      return res.status(202).json({
+        message: 'Event accepted for processing',
+        event_id: savedEvent.id,
+        status: savedEvent.status || 'PENDING',
+        decision: 'PENDING',
+        reason: 'Queued for asynchronous classification.',
+        ai_used: false,
+        ai_model: null,
+        ai_confidence: null,
+        is_fallback: false,
+        rule_id: null,
+        processed_at: null,
       });
     } catch (error) {
       console.error('Submit Error:', error);

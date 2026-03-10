@@ -129,8 +129,9 @@ Incoming Event
     ▼
 ┌─────────────────┐
 │  Save to DB      │  Status: PENDING
-│  Run Pipeline    │  Decision returned in API response
+│  Return 202      │  Immediate acknowledgment to caller
 └────────┬────────┘
+         │ (async)
          ▼
 ┌─────────────────┐
 │  Expiry Check    │  expires_at in the past? → NEVER
