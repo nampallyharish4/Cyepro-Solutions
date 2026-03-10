@@ -16,7 +16,7 @@ import ruleRoutes from './routes/ruleRoutes';
 import deferredQueueRoutes from './routes/deferredQueueRoutes';
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3001;
 
 // 1. Security Headers
 app.use(helmet());
