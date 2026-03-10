@@ -32,6 +32,9 @@ Reviewers can access the live dashboard using the pre-filled credentials on the 
 | `GEMINI_API_KEY`                | Backend  | Google Gemini API key (Fallback AI) |
 | `JWT_SECRET`                    | Backend  | Token signing secret                |
 | `NODE_ENV`                      | Backend  | `production`                        |
+| `TRUST_PROXY`                   | Backend  | `1` for Render reverse proxy        |
+| `FRONTEND_URL`                  | Backend  | Primary allowed frontend origin     |
+| `CORS_ALLOWED_ORIGINS`          | Backend  | Additional comma-separated origins  |
 | `NEXT_PUBLIC_API_URL`           | Frontend | Points to Render backend API        |
 | `NEXT_PUBLIC_SUPABASE_URL`      | Frontend | Supabase project URL                |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Frontend | Supabase public anon key            |

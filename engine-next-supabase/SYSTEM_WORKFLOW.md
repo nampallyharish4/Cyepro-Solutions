@@ -9,9 +9,9 @@ This document describes the runtime execution flows for the Next.js + Supabase i
 1. **User Interaction**: An operator submits a notification event via the **Event Simulator** in the Next.js frontend.
 2. **API Request**: The frontend sends a `POST /api/notifications` to the Express backend.
 3. **Initial Storage**:
-   - The backend saves the raw event to `notification_events` (status `PENDING`).
-   - API immediately returns `202 Accepted` with the `event_id`.
-4. **Asynchronous Pipeline**: The `DecisionEngine` triggers processing in the background.
+   - The backend saves the raw event to `notification_events` (initial status `PENDING`).
+   - The engine executes the pipeline and returns decision payload in the same request.
+4. **Decision Pipeline**: `DecisionEngine.processEvent()` orchestrates expiry, dedupe, rules, fatigue, and AI fallback logic.
 5. **Deduplication**:
    - **Exact**: Checks matching `dedupe_key`.
    - **Near-Duplicate**: PostgreSQL `pg_trgm` similarity > 0.8 against same user's events in last 24h.
@@ -23,6 +23,9 @@ This document describes the runtime execution flows for the Next.js + Supabase i
    - `notification_events` status updated to `PROCESSED`.
    - If LATER: entry added to `deferred_queue` with `process_after = now + 30min`.
    - Dashboard auto-refreshes via 8-second polling interval.
+10. **Pending Fallback Handling**:
+
+- If any client receives a temporary pending state, frontend polls `GET /api/notifications/:id` until a terminal decision is available.
 
 ---
 
@@ -55,7 +58,9 @@ This document describes the runtime execution flows for the Next.js + Supabase i
 ## 4. Rule Change & Fatigue Config Flow
 
 1. **Interface**: Admin creates/edits a rule or updates the fatigue threshold in the **Rules Manager**.
-2. **Update**: API call updates the `rules` table. `FATIGUE_LIMIT` is stored as `condition_type = 'system_setting'`, `name = 'FATIGUE_LIMIT'`.
+2. **Update**:
+   - Rule CRUD updates the `rules` table.
+   - Fatigue threshold updates `system_settings` via `key = FATIGUE_LIMIT`.
 3. **Zero-Downtime**: `DecisionEngine` reads active rules and the `FATIGUE_LIMIT` value from the database for every event — no server restart required.
 4. **Frontend Safety**: `getRules` always returns an array (never `null`). If the API fails, the Rules page shows an error banner with a **Retry** button.
 

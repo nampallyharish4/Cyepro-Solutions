@@ -49,6 +49,9 @@ The system flows through a **Deterministic → Intelligent → Fail-Safe** pipel
 | `GEMINI_API_KEY` | (Optional) Google Gemini API Key |
 | `JWT_SECRET` | Token signing secret |
 | `PORT` | (Optional) Default `5000` |
+| `FRONTEND_URL` | (Optional) Primary allowed frontend origin |
+| `CORS_ALLOWED_ORIGINS` | (Optional) Additional comma-separated allowed origins |
+| `TRUST_PROXY` | (Optional) Proxy hops to trust (set `1` on Render) |
 
 **Frontend (`engine-next-supabase/frontend/.env.local`)**
 | Variable | Description |

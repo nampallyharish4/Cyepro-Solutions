@@ -13,11 +13,12 @@ Built with **Node.js · Express · TypeScript · Supabase · Groq (Llama-3.3-70b
 
 ### Notifications
 
-| Method | Route                   | Access | Description                         |
-| ------ | ----------------------- | ------ | ----------------------------------- |
-| POST   | `/api/notifications`    | Auth   | Submit event — `202 Accepted` async |
-| GET    | `/api/metrics`          | Auth   | Dashboard totals + recent activity  |
-| GET    | `/api/metrics/timeline` | Auth   | 24h hourly NOW/LATER/NEVER buckets  |
+| Method | Route                    | Access | Description                                                 |
+| ------ | ------------------------ | ------ | ----------------------------------------------------------- |
+| POST   | `/api/notifications`     | Auth   | Submit event and return decision payload                    |
+| GET    | `/api/notifications/:id` | Auth   | Fetch latest event status/decision (used by simulator poll) |
+| GET    | `/api/metrics`           | Auth   | Dashboard totals + recent activity                          |
+| GET    | `/api/metrics/timeline`  | Auth   | 24h hourly NOW/LATER/NEVER buckets                          |
 
 ### Audit
 
@@ -78,6 +79,7 @@ cp .env.example .env
 | `PORT`                      | Optional | Default `5000`                             |
 | `FRONTEND_URL`              | Optional | Primary frontend origin for CORS allowlist |
 | `CORS_ALLOWED_ORIGINS`      | Optional | Comma-separated additional CORS origins    |
+| `TRUST_PROXY`               | Optional | Proxy hops to trust (set `1` on Render)    |
 
 ## Scripts
 

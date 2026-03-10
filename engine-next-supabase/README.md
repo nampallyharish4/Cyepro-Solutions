@@ -28,7 +28,7 @@ An intelligent notification management system that classifies events as **NOW** 
 
 | Technology                | Version | Why                                                                                                     |
 | ------------------------- | ------- | ------------------------------------------------------------------------------------------------------- |
-| **Next.js**               | 15.1.6  | App Router with React 19 server components — fastest iteration for a mobile-first dashboard             |
+| **Next.js**               | 15.5.12 | App Router with React 19 server components — fastest iteration for a mobile-first dashboard             |
 | **Express.js**            | 5.2.1   | Lightweight, battle-tested HTTP framework for the REST API                                              |
 | **TypeScript**            | 5.9.3   | Type safety across the full stack, catches contract mismatches at compile time                          |
 | **Supabase (PostgreSQL)** | —       | Managed PostgreSQL with built-in auth infra, RPC functions, and `pg_trgm` for trigram similarity        |
@@ -129,9 +129,8 @@ Incoming Event
     ▼
 ┌─────────────────┐
 │  Save to DB      │  Status: PENDING
-│  Return 202      │  ← Client gets immediate response
+│  Run Pipeline    │  Decision returned in API response
 └────────┬────────┘
-         │ (async)
          ▼
 ┌─────────────────┐
 │  Expiry Check    │  expires_at in the past? → NEVER
@@ -163,6 +162,7 @@ Incoming Event
          ▼
 ┌─────────────────┐
 │  Finalize        │  Write audit_log, update status, queue if LATER
+│  + Status API    │  GET /api/notifications/:id for pending fallback polling
 └─────────────────┘
 ```
 
