@@ -262,7 +262,7 @@ export default function Signup() {
         setModal({
           type: 'error',
           title: 'Server Unreachable',
-          message: 'Cannot connect to the backend. Make sure the server is running on port 5000.',
+          message: 'Cannot connect to the backend. Make sure the server is running on port 3001.',
         });
       } else {
         setModal({

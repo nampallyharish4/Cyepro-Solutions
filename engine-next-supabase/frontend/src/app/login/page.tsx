@@ -187,7 +187,7 @@ export default function Login() {
     }
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api';
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
       const { data } = await axios.post(`${apiBase}/login`, {
         email: form.email.trim().toLowerCase(),
         password: form.password,
@@ -209,7 +209,7 @@ export default function Login() {
       const msg =
         err?.response?.data?.error ||
         (err?.code === 'ERR_NETWORK'
-          ? 'Cannot reach the server. Make sure the backend is running on port 5000.'
+          ? 'Cannot reach the server. Make sure the backend is running on port 3001.'
           : 'Login failed. Please check your credentials and try again.');
 
       setModal({
