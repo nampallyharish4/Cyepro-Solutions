@@ -3,8 +3,6 @@
 > **Live URLs for Testing**
 >
 > - **Frontend**: https://cyepro-solutions.vercel.app
-> - **Backend**: https://cyepro-notification-engine-backend.onrender.com
-> - **Health**: https://cyepro-notification-engine-backend.onrender.com/health
 
 This document provides **50+ structured test cases** covering every requirement from the build test document, plus additional UX and auth flow tests added during Phase 4 hardening. Tests are organised by system capability.
 
