@@ -125,9 +125,3 @@ The LATER queue uses a 1-minute `setInterval` poller. Production scale would req
 - [engine-next-supabase/PLAN_OF_ACTION.md](./engine-next-supabase/PLAN_OF_ACTION.md) — Phased development log
 - [engine-next-supabase/SYSTEM_WORKFLOW.md](./engine-next-supabase/SYSTEM_WORKFLOW.md) — Runtime logic and failure flows
 - [engine-next-supabase/DEPLOYMENT.md](./engine-next-supabase/DEPLOYMENT.md) — Live URLs and cloud configuration
-
-## Repository Hygiene
-
-- Removed temporary debug scripts that were not part of runtime or build flow.
-- Build artifacts and local caches (for example `node_modules`, `.next`, and `dist`) should remain untracked.
-- Temporary local files (for example `*.tmp`, `*.bak`, and ad-hoc output logs) are now covered by `.gitignore` rules.
