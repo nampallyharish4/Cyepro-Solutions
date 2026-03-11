@@ -30,14 +30,25 @@ type ModalProps = {
   onContinue?: () => void;
 };
 
-function Modal({ type, title, message, email, role, onClose, onContinue }: ModalProps) {
+function Modal({
+  type,
+  title,
+  message,
+  email,
+  role,
+  onClose,
+  onContinue,
+}: ModalProps) {
   const isSuccess = type === 'success';
 
   return (
     /* Backdrop */
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(6px)' }}
+      style={{
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        backdropFilter: 'blur(6px)',
+      }}
       onClick={onClose}
     >
       {/* Panel */}
@@ -45,7 +56,9 @@ function Modal({ type, title, message, email, role, onClose, onContinue }: Modal
         className="relative w-full max-w-sm rounded-3xl border p-8 space-y-6 shadow-2xl"
         style={{
           backgroundColor: '#0f0f12',
-          borderColor: isSuccess ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)',
+          borderColor: isSuccess
+            ? 'rgba(16,185,129,0.3)'
+            : 'rgba(239,68,68,0.3)',
           boxShadow: isSuccess
             ? '0 0 60px rgba(16,185,129,0.15), 0 25px 50px rgba(0,0,0,0.6)'
             : '0 0 60px rgba(239,68,68,0.15), 0 25px 50px rgba(0,0,0,0.6)',
@@ -69,7 +82,9 @@ function Modal({ type, title, message, email, role, onClose, onContinue }: Modal
               background: isSuccess
                 ? 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(5,150,105,0.1))'
                 : 'linear-gradient(135deg, rgba(239,68,68,0.2), rgba(185,28,28,0.1))',
-              border: isSuccess ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(239,68,68,0.3)',
+              border: isSuccess
+                ? '1px solid rgba(16,185,129,0.3)'
+                : '1px solid rgba(239,68,68,0.3)',
             }}
           >
             {isSuccess ? (
@@ -93,14 +108,24 @@ function Modal({ type, title, message, email, role, onClose, onContinue }: Modal
 
         {/* User info (success only) */}
         {isSuccess && email && (
-          <div className="rounded-2xl p-4 space-y-2" style={{ backgroundColor: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)' }}>
+          <div
+            className="rounded-2xl p-4 space-y-2"
+            style={{
+              backgroundColor: 'rgba(16,185,129,0.08)',
+              border: '1px solid rgba(16,185,129,0.15)',
+            }}
+          >
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-500 uppercase tracking-widest font-bold">Access Key</span>
+              <span className="text-zinc-500 uppercase tracking-widest font-bold">
+                Access Key
+              </span>
               <span className="text-emerald-400 font-mono">{email}</span>
             </div>
             {role && (
               <div className="flex items-center justify-between text-xs">
-                <span className="text-zinc-500 uppercase tracking-widest font-bold">Role</span>
+                <span className="text-zinc-500 uppercase tracking-widest font-bold">
+                  Role
+                </span>
                 <span className="flex items-center gap-1.5 text-emerald-400 font-bold uppercase tracking-widest">
                   <ShieldCheck className="h-3 w-3" />
                   {role}
@@ -123,7 +148,9 @@ function Modal({ type, title, message, email, role, onClose, onContinue }: Modal
               <button
                 onClick={onContinue}
                 className="flex-1 py-3 rounded-2xl text-sm font-black text-white transition-all flex items-center justify-center gap-2"
-                style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                }}
               >
                 Enter System <ArrowRight className="h-4 w-4" />
               </button>
@@ -132,7 +159,9 @@ function Modal({ type, title, message, email, role, onClose, onContinue }: Modal
             <button
               onClick={onClose}
               className="w-full py-3 rounded-2xl text-sm font-black text-white transition-all"
-              style={{ background: 'linear-gradient(135deg, #ef4444, #b91c1c)' }}
+              style={{
+                background: 'linear-gradient(135deg, #ef4444, #b91c1c)',
+              }}
             >
               Try Again
             </button>
@@ -167,6 +196,10 @@ export default function Login() {
 
   const handleCloseModal = () => {
     if (modal?.type === 'success') {
+      // User chose to stay on login after successful auth prompt.
+      // Ensure no previous session token remains active.
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       setForm({ email: '', password: '' });
     }
     setModal(null);
@@ -176,18 +209,24 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
 
+    // Clear any previous auth state before starting a new login flow.
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+
     if (!form.email || !form.password) {
       setModal({
         type: 'error',
         title: 'Missing Credentials',
-        message: 'Both an access key (email) and master secret (password) are required.',
+        message:
+          'Both an access key (email) and master secret (password) are required.',
       });
       setLoading(false);
       return;
     }
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api';
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000/api';
       const { data } = await axios.post(`${apiBase}/login`, {
         email: form.email.trim().toLowerCase(),
         password: form.password,
@@ -197,9 +236,10 @@ export default function Login() {
       setModal({
         type: 'success',
         title: 'Access Granted',
-        message: 'Authentication successful. Welcome to the Notification Prioritization Engine.',
+        message:
+          'Authentication successful. Welcome to the Notification Prioritization Engine.',
         email: data.user.email,
-        role: data.user.role,
+        role: String(data.user.role || '').toLowerCase(),
         // Store credentials in modal state only
         pendingToken: data.token,
         pendingUser: JSON.stringify(data.user),
@@ -232,13 +272,15 @@ export default function Login() {
           message={modal.message}
           email={modal.email}
           role={modal.role}
-          onClose={handleCloseModal}  // Stay — discard credentials, stay on login
+          onClose={handleCloseModal} // Stay — discard credentials, stay on login
           onContinue={
             modal.navigateTo
               ? () => {
                   // Commit credentials to localStorage only now
-                  if (modal.pendingToken) localStorage.setItem('token', modal.pendingToken);
-                  if (modal.pendingUser) localStorage.setItem('user', modal.pendingUser);
+                  if (modal.pendingToken)
+                    localStorage.setItem('token', modal.pendingToken);
+                  if (modal.pendingUser)
+                    localStorage.setItem('user', modal.pendingUser);
                   router.push(modal.navigateTo!);
                 }
               : undefined
@@ -276,7 +318,9 @@ export default function Login() {
                     required
                     className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
                     value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, email: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -294,7 +338,9 @@ export default function Login() {
                     required
                     className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
                     value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    onChange={(e) =>
+                      setForm({ ...form, password: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -336,16 +382,28 @@ export default function Login() {
                 <strong>Reviewer Credentials:</strong>
                 <div className="mt-2 space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 w-16">Admin</span>
-                    <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">admin@cyepro.com</code>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 w-16">
+                      Admin
+                    </span>
+                    <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
+                      admin@cyepro.com
+                    </code>
                     <span className="text-amber-500/40">|</span>
-                    <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">password123</code>
+                    <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
+                      password123
+                    </code>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 w-16">Operator</span>
-                    <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">operator@cyepro.com</code>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-amber-400/60 w-16">
+                      Operator
+                    </span>
+                    <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
+                      operator@cyepro.com
+                    </code>
                     <span className="text-amber-500/40">|</span>
-                    <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">operator123</code>
+                    <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
+                      operator123
+                    </code>
                   </div>
                 </div>
               </div>

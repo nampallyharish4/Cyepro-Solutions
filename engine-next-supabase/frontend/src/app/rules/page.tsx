@@ -120,8 +120,13 @@ export default function RulesManager() {
       });
       showToast('Rule created — engine will use it immediately.', 'success');
       fetchRules();
-    } catch {
-      showToast('Failed to create rule.', 'error');
+    } catch (e: any) {
+      showToast(
+        e?.response?.status === 403
+          ? 'Admin access required. Please sign in with an admin account.'
+          : 'Failed to create rule.',
+        'error',
+      );
     }
   };
 
@@ -159,7 +164,9 @@ export default function RulesManager() {
       fetchRules();
     } catch (e: any) {
       showToast(
-        e?.response?.data?.error || 'Failed to update fatigue threshold.',
+        e?.response?.status === 403
+          ? 'Admin access required. Please sign in with an admin account.'
+          : e?.response?.data?.error || 'Failed to update fatigue threshold.',
         'error',
       );
     } finally {
@@ -173,8 +180,13 @@ export default function RulesManager() {
       setDeleteConfirmId(null);
       showToast('Rule soft-deleted — recoverable from database.', 'success');
       fetchRules();
-    } catch {
-      showToast('Delete failed.', 'error');
+    } catch (e: any) {
+      showToast(
+        e?.response?.status === 403
+          ? 'Admin access required. Please sign in with an admin account.'
+          : 'Delete failed.',
+        'error',
+      );
     }
   };
 
@@ -205,8 +217,13 @@ export default function RulesManager() {
       setEditForm({});
       showToast('Rule updated — engine picks up changes live.', 'success');
       fetchRules();
-    } catch {
-      showToast('Failed to update rule.', 'error');
+    } catch (e: any) {
+      showToast(
+        e?.response?.status === 403
+          ? 'Admin access required. Please sign in with an admin account.'
+          : 'Failed to update rule.',
+        'error',
+      );
     }
   };
 
