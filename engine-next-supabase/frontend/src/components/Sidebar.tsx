@@ -150,7 +150,7 @@ export function Sidebar() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg shadow-purple-500/20">
             <Send className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white uppercase italic">Cyepro AI</span>
+          <span className="text-xl font-bold tracking-tight text-white uppercase italic">NPE</span>
         </div>
 
         <nav className="flex flex-1 items-center justify-start gap-2 overflow-x-auto overflow-y-hidden px-4 md:block md:space-y-1 md:overflow-visible md:px-2">

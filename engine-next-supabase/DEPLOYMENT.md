@@ -6,11 +6,11 @@ This document describes the production deployment strategy for the Notification 
 
 | Service         | Provider | URL                                                     |
 | --------------- | -------- | ------------------------------------------------------- |
-| Frontend        | Vercel   | https://cyepro-solutions.vercel.app                     |
+| Frontend        | Vercel   | https://npe-solutions.vercel.app                     |
 | Backend         | Render   | _(configured via Render dashboard — see render.yaml)_   |
 | Database        | Supabase | Managed PostgreSQL (cloud)                              |
 | Health Endpoint | Render   | `<BACKEND_URL>/health`                                  |
-| Repository      | GitHub   | https://github.com/nampallyharish4/Cyepro-Solutions.git |
+| Repository      | GitHub   | https://github.com/nampallyharish4/Notification-Prioritization-Engine.git |
 
 ## Production Credentials
 
@@ -18,8 +18,8 @@ Reviewers can access the live dashboard using the pre-filled credentials on the 
 
 | Role     | Email                 | Password      |
 | -------- | --------------------- | ------------- |
-| Admin    | `admin@cyepro.com`    | `password123` |
-| Operator | `operator@cyepro.com` | `operator123` |
+| Admin    | `admin@npe.com`    | `password123` |
+| Operator | `operator@npe.com` | `operator123` |
 
 ## Environment Variables (Vercel / Render)
 

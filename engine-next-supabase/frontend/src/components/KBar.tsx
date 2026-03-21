@@ -168,7 +168,7 @@ export function KBar() {
               </div>
               <div className="flex items-center gap-2 text-purple-500/50">
                 <Command className="h-3.5 w-3.5" />
-                <span>Cyepro Command Shell v2.1</span>
+                <span>Command Shell v2.1</span>
               </div>
             </div>
           </motion.div>

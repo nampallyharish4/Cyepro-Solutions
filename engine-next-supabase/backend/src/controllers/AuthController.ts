@@ -32,7 +32,7 @@ export class AuthController {
 
       // Self-heal legacy data: keep canonical reviewer admin account as admin.
       // This prevents stale role rows from breaking admin-only routes.
-      const canonicalAdminEmail = 'admin@cyepro.com';
+      const canonicalAdminEmail = 'admin@npe.com';
       if (
         user.email?.toLowerCase() === canonicalAdminEmail &&
         String(user.role || '').toLowerCase() !== 'admin'

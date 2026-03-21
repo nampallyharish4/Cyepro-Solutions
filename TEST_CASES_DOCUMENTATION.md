@@ -2,15 +2,15 @@
 
 > **Live URLs for Testing**
 >
-> - **Frontend**: https://cyepro-solutions.vercel.app
+> - **Frontend**: https://npe-solutions.vercel.app
 
 This document provides **50+ structured test cases** covering every requirement from the build test document, plus additional UX and auth flow tests added during Phase 4 hardening. Tests are organised by system capability.
 
 **Credentials for all tests:**
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | `admin@cyepro.com` | `password123` |
-| Operator | `operator@cyepro.com` | `operator123` |
+| Admin | `admin@npe.com` | `password123` |
+| Operator | `operator@npe.com` | `operator123` |
 
 ---
 
@@ -45,7 +45,7 @@ This document provides **50+ structured test cases** covering every requirement 
 | Field        | Value                                                                              |
 | ------------ | ---------------------------------------------------------------------------------- |
 | **Endpoint** | `POST /api/login`                                                                  |
-| **Body**     | `{ "email": "admin@cyepro.com", "password": "password123" }`                       |
+| **Body**     | `{ "email": "admin@npe.com", "password": "password123" }`                       |
 | **Expected** | `200 OK` with `{ token: "jwt...", user: { role: "admin" } }`                       |
 | **UI Step**  | Open login page → pre-filled credentials → click Sign In → redirected to Dashboard |
 
@@ -54,7 +54,7 @@ This document provides **50+ structured test cases** covering every requirement 
 | Field        | Value                                                                |
 | ------------ | -------------------------------------------------------------------- |
 | **Endpoint** | `POST /api/login`                                                    |
-| **Body**     | `{ "email": "operator@cyepro.com", "password": "operator123" }`      |
+| **Body**     | `{ "email": "operator@npe.com", "password": "operator123" }`      |
 | **Expected** | `200 OK` with `{ token: "jwt...", user: { role: "operator" } }`      |
 | **UI Step**  | Enter operator credentials → click Sign In → redirected to Dashboard |
 
@@ -62,7 +62,7 @@ This document provides **50+ structured test cases** covering every requirement 
 
 | Field        | Value                                                             |
 | ------------ | ----------------------------------------------------------------- |
-| **Body**     | `{ "email": "admin@cyepro.com", "password": "wrongpassword" }`    |
+| **Body**     | `{ "email": "admin@npe.com", "password": "wrongpassword" }`    |
 | **Expected** | `401 Unauthorized` with `{ error: "Invalid email or password." }` |
 | **UI Step**  | Error toast appears, stays on login page                          |
 
@@ -70,7 +70,7 @@ This document provides **50+ structured test cases** covering every requirement 
 
 | Field        | Value                                                             |
 | ------------ | ----------------------------------------------------------------- |
-| **Body**     | `{ "email": "nobody@cyepro.com", "password": "whatever" }`        |
+| **Body**     | `{ "email": "nobody@npe.com", "password": "whatever" }`        |
 | **Expected** | `401 Unauthorized` with `{ error: "Invalid email or password." }` |
 
 ### TC-1.5: Protected Route — No Token
@@ -181,7 +181,7 @@ These verify that the **Groq Llama-3.3-70b-versatile** model classifies based on
 | **4.2** | Disk Space Warning | `sys_adm`  | `WARN`     | `AWS_EC2`    | `EBS Volume 80% Full`  | `Instance i-0abc1 is reaching 80% disk capacity.`                                  | **LATER** |
 | **4.3** | CI/CD Success      | `dev_user` | `BUILD`    | `GITHUB`     | `Action Completed`     | `Workflow 'Unit Tests' passed on branch 'feature/ui-fix'.`                         | **NEVER** |
 | **4.4** | DDoS Detected      | `net_eng`  | `SECURITY` | `CLOUDFLARE` | `Increased Traffic`    | `Unexpected spike (400% increase) in HTTP requests detected.`                      | **NOW**   |
-| **4.5** | SSL Expiring       | `ops_team` | `WARN`     | `CERTBOT`    | `Certificate Expiring` | `SSL certificate for api.cyepro.com expires in 7 days.`                            | **LATER** |
+| **4.5** | SSL Expiring       | `ops_team` | `WARN`     | `CERTBOT`    | `Certificate Expiring` | `SSL certificate for api.example.com expires in 7 days.`                            | **LATER** |
 
 ---
 
@@ -979,7 +979,7 @@ Tests the AI's ability to distinguish real urgency from fake urgency.
 
 | Step | Action                          | Expected                                                 |
 | ---- | ------------------------------- | -------------------------------------------------------- |
-| 1    | Sign up with `admin@cyepro.com` | Error modal: "An account with this email already exists" |
+| 1    | Sign up with `admin@npe.com` | Error modal: "An account with this email already exists" |
 
 ---
 

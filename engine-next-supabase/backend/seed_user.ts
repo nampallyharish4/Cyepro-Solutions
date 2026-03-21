@@ -17,25 +17,25 @@ async function seed() {
   const { data: existingUser } = await supabase
     .from('users')
     .select('id')
-    .eq('email', 'admin@cyepro.com')
+    .eq('email', 'admin@npe.com')
     .single();
 
   if (existingUser) {
     await supabase
       .from('users')
       .update({ password_hash: passwordHash, role: 'admin' })
-      .eq('email', 'admin@cyepro.com');
-    console.log('✅ Admin user updated! email: admin@cyepro.com');
+      .eq('email', 'admin@npe.com');
+    console.log('✅ Admin user updated! email: admin@npe.com');
   } else {
     const { error } = await supabase.from('users').insert({
-      email: 'admin@cyepro.com',
+      email: 'admin@npe.com',
       password_hash: passwordHash,
       role: 'admin',
     });
     if (error) {
       console.error('Error seeding user:', error.message);
     } else {
-      console.log('✅ Admin user created! email: admin@cyepro.com');
+      console.log('✅ Admin user created! email: admin@npe.com');
     }
   }
 
@@ -44,22 +44,22 @@ async function seed() {
   const { data: existingOp } = await supabase
     .from('users')
     .select('id')
-    .eq('email', 'operator@cyepro.com')
+    .eq('email', 'operator@npe.com')
     .single();
 
   if (existingOp) {
     await supabase
       .from('users')
       .update({ password_hash: opHash, role: 'operator' })
-      .eq('email', 'operator@cyepro.com');
-    console.log('✅ Operator user updated! email: operator@cyepro.com');
+      .eq('email', 'operator@npe.com');
+    console.log('✅ Operator user updated! email: operator@npe.com');
   } else {
     await supabase.from('users').insert({
-      email: 'operator@cyepro.com',
+      email: 'operator@npe.com',
       password_hash: opHash,
       role: 'operator',
     });
-    console.log('✅ Operator user created! email: operator@cyepro.com');
+    console.log('✅ Operator user created! email: operator@npe.com');
   }
 
   console.log('Seeding Fatigue Limit Rule...');

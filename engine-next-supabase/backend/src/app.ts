@@ -66,7 +66,7 @@ const devOrigins = [
 ];
 
 const allowedOrigins = new Set(
-  [...configuredOrigins, ...devOrigins, 'https://cyepro-solutions.vercel.app']
+  [...configuredOrigins, ...devOrigins, 'https://npe-solutions.vercel.app']
     .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
     .map((v) => v.trim()),
 );

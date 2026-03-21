@@ -446,7 +446,7 @@ export default function Signup() {
           {/* Footer */}
           <div className="flex items-center justify-center gap-2 text-zinc-600">
             <Terminal className="h-4 w-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Secured by Cyepro Solutions</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Secured by NPE Solutions</span>
           </div>
         </div>
       </div>

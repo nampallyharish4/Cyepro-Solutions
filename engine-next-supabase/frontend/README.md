@@ -1,4 +1,4 @@
-# Cyepro AI — Frontend
+# Notification Prioritization Engine — Frontend
 
 Built with **Next.js 15 (App Router)** · **TypeScript** · **Tailwind CSS** · **Framer Motion**
 

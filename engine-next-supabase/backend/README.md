@@ -1,4 +1,4 @@
-# Cyepro AI — Backend Service
+# Notification Prioritization Engine — Backend Service
 
 Built with **Node.js · Express · TypeScript · Supabase · Groq (Llama-3.3-70b-versatile)**
 

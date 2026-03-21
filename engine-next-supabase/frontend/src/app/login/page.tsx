@@ -386,7 +386,7 @@ export default function Login() {
                       Admin
                     </span>
                     <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
-                      admin@cyepro.com
+                      admin@npe.com
                     </code>
                     <span className="text-amber-500/40">|</span>
                     <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
@@ -398,7 +398,7 @@ export default function Login() {
                       Operator
                     </span>
                     <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
-                      operator@cyepro.com
+                      operator@npe.com
                     </code>
                     <span className="text-amber-500/40">|</span>
                     <code className="text-[10px] bg-amber-500/10 px-1.5 py-0.5 rounded">
@@ -414,7 +414,7 @@ export default function Login() {
           <div className="flex items-center justify-center gap-2 text-zinc-600">
             <Terminal className="h-4 w-4" />
             <span className="text-[10px] font-bold uppercase tracking-widest">
-              Secured by Cyepro Solutions
+              Secured by NPE Solutions
             </span>
           </div>
         </div>

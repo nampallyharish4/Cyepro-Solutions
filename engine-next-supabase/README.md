@@ -10,17 +10,17 @@ An intelligent notification management system that classifies events as **NOW** 
 
 | Service           | URL                                                     |
 | ----------------- | ------------------------------------------------------- |
-| Frontend (Vercel) | https://cyepro-solutions.vercel.app                     |
+| Frontend (Vercel) | https://npe-solutions.vercel.app                     |
 | Backend (Render)  | _(configured via Render dashboard)_                     |
 | Health Endpoint   | `<BACKEND_URL>/health`                                  |
-| GitHub Repository | https://github.com/nampallyharish4/Cyepro-Solutions.git |
+| GitHub Repository | https://github.com/nampallyharish4/Notification-Prioritization-Engine.git |
 
 ### Demo Credentials (shown on login page)
 
 | Role     | Email                 | Password      |
 | -------- | --------------------- | ------------- |
-| Admin    | `admin@cyepro.com`    | `password123` |
-| Operator | `operator@cyepro.com` | `operator123` |
+| Admin    | `admin@npe.com`    | `password123` |
+| Operator | `operator@npe.com` | `operator123` |
 
 ---
 

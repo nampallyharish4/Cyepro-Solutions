@@ -7,7 +7,7 @@ const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Cyepro AI | Notification Prioritization Engine',
+  title: 'Notification Prioritization Engine',
   description:
     'Intelligent Notification Management System with Fail-Safe Architecture',
 };

@@ -1,4 +1,4 @@
-# Cyepro AI — Notification Prioritization Engine
+# Notification Prioritization Engine
 
 ## Overview
 
@@ -16,8 +16,8 @@ The system flows through a **Deterministic → Intelligent → Fail-Safe** pipel
 
 | Service           | URL                                                     |
 | ----------------- | ------------------------------------------------------- |
-| Frontend (Vercel) | https://cyepro-solutions.vercel.app                     |
-| GitHub Repository | https://github.com/nampallyharish4/Cyepro-Solutions.git |
+| Frontend (Vercel) | https://npe-solutions.vercel.app                     |
+| GitHub Repository | https://github.com/nampallyharish4/Notification-Prioritization-Engine.git |
 
 ## Tech Stack
 
